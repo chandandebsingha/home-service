@@ -252,7 +252,7 @@ export default function ProviderScreen() {
           </View>
           
           <View style={styles.priceContainer}>
-            <Text style={styles.price}>${provider.price}</Text>
+            <Text style={styles.price}>₹{provider.price}</Text>
             <Text style={styles.priceLabel}>per service</Text>
           </View>
         </View>
@@ -279,7 +279,7 @@ export default function ProviderScreen() {
       {/* Book Now Button */}
       <View style={styles.bookContainer}>
         <TouchableOpacity style={styles.bookButton} onPress={handleBookNow}>
-          <Text style={styles.bookButtonText}>Book Now - ${provider.price}</Text>
+          <Text style={styles.bookButtonText}>Book Now - ₹{provider.price}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

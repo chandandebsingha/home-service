@@ -269,7 +269,7 @@ export default function CategoryScreen() {
                   <Text style={styles.experience}>{provider.experience} experience</Text>
                 </View>
                 <View style={styles.priceContainer}>
-                  <Text style={styles.price}>${provider.price}</Text>
+                  <Text style={styles.price}>₹{provider.price}</Text>
                   <Text style={styles.priceLabel}>per service</Text>
                 </View>
               </View>

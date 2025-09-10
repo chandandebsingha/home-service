@@ -79,7 +79,7 @@ export default function BookingConfirmationScreen() {
               <MaterialIcons name="attach-money" size={20} color="#10b981" />
               <View style={styles.detailContent}>
                 <Text style={styles.detailLabel}>Total Amount</Text>
-                <Text style={styles.priceText}>${params.price}</Text>
+                <Text style={styles.priceText}>₹{params.price}</Text>
               </View>
             </View>
           </View>

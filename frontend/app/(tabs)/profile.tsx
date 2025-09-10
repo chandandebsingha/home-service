@@ -67,9 +67,9 @@ export default function ProfileScreen() {
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>JD</Text>
           </View>
-          <Text style={styles.userName}>John Doe</Text>
-          <Text style={styles.userEmail}>john.doe@example.com</Text>
-          <Text style={styles.userPhone}>+1 (555) 123-4567</Text>
+          <Text style={styles.userName}>Chandan Singha</Text>
+          <Text style={styles.userEmail}>chandan@gmail.com</Text>
+          <Text style={styles.userPhone}>+91 9003384394</Text>
           
           <TouchableOpacity style={styles.editButton}>
             <MaterialIcons name="edit" size={16} color="#6366f1" />
@@ -85,7 +85,7 @@ export default function ProfileScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>$850</Text>
+            <Text style={styles.statNumber}>₹850</Text>
             <Text style={styles.statLabel}>Total Spent</Text>
           </View>
           <View style={styles.statDivider} />

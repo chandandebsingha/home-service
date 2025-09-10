@@ -27,7 +27,7 @@ const mockBookings: Booking[] = [
   {
     id: '1',
     serviceName: 'House Cleaning',
-    providerName: 'Sarah Johnson',
+    providerName: 'Dipika Roy',
     date: 'Dec 28, 2024',
     time: '10:00 AM',
     status: 'upcoming',
@@ -37,7 +37,7 @@ const mockBookings: Booking[] = [
   {
     id: '2',
     serviceName: 'Plumbing Repair',
-    providerName: 'Mike Wilson',
+    providerName: 'Varun Singh',
     date: 'Dec 25, 2024',
     time: '2:00 PM',
     status: 'upcoming',
@@ -47,7 +47,7 @@ const mockBookings: Booking[] = [
   {
     id: '3',
     serviceName: 'House Cleaning',
-    providerName: 'Sarah Johnson',
+    providerName: 'Dipika Roy',
     date: 'Dec 15, 2024',
     time: '10:00 AM',
     status: 'completed',
@@ -58,7 +58,7 @@ const mockBookings: Booking[] = [
   {
     id: '4',
     serviceName: 'Electrical Work',
-    providerName: 'John Smith',
+    providerName: 'Ravi Kumar',
     date: 'Dec 10, 2024',
     time: '3:00 PM',
     status: 'completed',

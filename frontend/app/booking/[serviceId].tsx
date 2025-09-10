@@ -154,7 +154,7 @@ export default function BookingScreen() {
             <Text style={styles.serviceDuration}>{service.duration}</Text>
           </View>
           <View style={styles.servicePrice}>
-            <Text style={styles.priceText}>${service.price}</Text>
+            <Text style={styles.priceText}>₹{service.price}</Text>
           </View>
           {selectedService === service.id && (
             <MaterialIcons name="check-circle" size={24} color="#10b981" />
@@ -254,7 +254,7 @@ export default function BookingScreen() {
         </View>
         <View style={[styles.summaryItem, styles.totalItem]}>
           <Text style={styles.totalLabel}>Total:</Text>
-          <Text style={styles.totalValue}>${totalPrice}</Text>
+          <Text style={styles.totalValue}>₹{totalPrice}</Text>
         </View>
       </View>
     </View>
@@ -280,7 +280,7 @@ export default function BookingScreen() {
       case 2:
         return 'Continue to Details';
       case 3:
-        return `Book Now - $${totalPrice}`;
+        return `Book Now - ₹ ${totalPrice}`;
       default:
         return 'Continue';
     }
