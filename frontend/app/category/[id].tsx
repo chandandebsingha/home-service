@@ -33,7 +33,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
     providers: [
       {
         id: '1',
-        name: 'Sarah Johnson',
+        name: 'Anisha',
         rating: 4.9,
         reviewCount: 127,
         price: 80,
@@ -45,7 +45,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
       },
       {
         id: '2',
-        name: 'Maria Garcia',
+        name: 'Deepika Patel',
         rating: 4.8,
         reviewCount: 95,
         price: 75,
@@ -57,7 +57,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
       },
       {
         id: '3',
-        name: 'Jennifer Lee',
+        name: 'Nita Kumari',
         rating: 4.7,
         reviewCount: 82,
         price: 85,
@@ -74,7 +74,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
     providers: [
       {
         id: '4',
-        name: 'Mike Wilson',
+        name: 'Manoj Kr. Ojha',
         rating: 4.9,
         reviewCount: 156,
         price: 120,
@@ -86,7 +86,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
       },
       {
         id: '5',
-        name: 'David Brown',
+        name: 'Prasanjit Ghosh',
         rating: 4.6,
         reviewCount: 78,
         price: 95,
@@ -103,7 +103,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
     providers: [
       {
         id: '6',
-        name: 'Robert Taylor',
+        name: 'Bipul Raj',
         rating: 4.8,
         reviewCount: 134,
         price: 150,
@@ -120,7 +120,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
     providers: [
       {
         id: '7',
-        name: 'John Smith',
+        name: 'Roshan Kumar',
         rating: 4.7,
         reviewCount: 112,
         price: 180,
@@ -137,7 +137,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
     providers: [
       {
         id: '8',
-        name: 'Carlos Rodriguez',
+        name: 'Rohit Tripathi',
         rating: 4.6,
         reviewCount: 89,
         price: 200,
@@ -154,7 +154,7 @@ const categoryData: { [key: string]: { title: string; providers: ServiceProvider
     providers: [
       {
         id: '9',
-        name: 'Steve Miller',
+        name: 'Gourav Taneja',
         rating: 4.5,
         reviewCount: 67,
         price: 160,

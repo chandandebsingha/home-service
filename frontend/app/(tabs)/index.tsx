@@ -1,76 +1,120 @@
-import React from 'react';
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  View,
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
+  View,
+  FlatList,
+  Image,
   Dimensions,
-} from 'react-native';
-import { router } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
+  TouchableOpacity,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  Platform,
+} from "react-native";
+import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialIcons } from "@expo/vector-icons";
 
-const { width } = Dimensions.get('window');
+type SliderImage = { id: string; uri: string };
+type Props = {
+  images?: SliderImage[];
+  height?: number;
+  autoPlay?: boolean;
+  intervalMs?: number;
+  onIndexChange?: (index: number) => void;
+  showDots?: boolean;
+  rounded?: number;
+};
 
-const serviceCategories = [
-  {
-    id: 'cleaning',
-    title: 'Cleaning',
-    icon: 'cleaning-services',
-    color: '#10b981',
-    description: 'House cleaning, deep cleaning',
-  },
-  {
-    id: 'repairs',
-    title: 'Repairs',
-    icon: 'build',
-    color: '#f59e0b',
-    description: 'Home repairs, maintenance',
-  },
-  {
-    id: 'plumbing',
-    title: 'Plumbing',
-    icon: 'plumbing',
-    color: '#3b82f6',
-    description: 'Pipe repairs, installations',
-  },
-  {
-    id: 'electrical',
-    title: 'Electrical',
-    icon: 'electrical-services',
-    color: '#ef4444',
-    description: 'Wiring, appliance repair',
-  },
-  {
-    id: 'painting',
-    title: 'Painting',
-    icon: 'format-paint',
-    color: '#8b5cf6',
-    description: 'Wall painting, touch-ups',
-  },
-  {
-    id: 'carpentry',
-    title: 'Carpentry',
-    icon: 'carpenter',
-    color: '#f97316',
-    description: 'Furniture, wood work',
-  },
-];
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export default function HomeScreen() {
+export default function ImageSlider({
+  images = [
+    // Sample online images for the slider
+    {
+      id: "1",
+      uri: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80"
+    },
+    {
+      id: "2", 
+      uri: "https://images.unsplash.com/photo-1581578731548-c64695cc6952?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    },
+    {
+      id: "3",
+      uri: "https://images.unsplash.com/photo-1584622650111-993a426fbf0a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80"
+    },
+    {
+      id: "4",
+      uri: "https://images.unsplash.com/photo-1527030280862-64139fba04ca?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2106&q=80"
+    }
+  ],
+  height = 240,
+  autoPlay = true, // Enable autoplay by default to showcase the slider
+  intervalMs = 3000,
+  onIndexChange,
+  showDots = true,
+  rounded = 12,
+}: Props) {
+  const [index, setIndex] = useState(0);
+  const listRef = useRef<FlatList<SliderImage>>(null);
+  const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const count = Array.isArray(images) ? images.length : 0;
+
+  const goTo = useCallback(
+    (i: number) => {
+      if (!count) return;
+      const next = (i + count) % count;
+      listRef.current?.scrollToIndex({ index: next, animated: true });
+    },
+    [count]
+  );
+
+  // autoplay
+  useEffect(() => {
+    if (!autoPlay || count < 2) return;
+    if (timer.current) clearInterval(timer.current);
+    timer.current = setInterval(() => goTo(index + 1), intervalMs);
+    return () => {
+      if (timer.current) clearInterval(timer.current);
+    };
+  }, [autoPlay, intervalMs, index, goTo, count]);
+
+  const onMomentumEnd = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const newIndex = Math.round(e.nativeEvent.contentOffset.x / SCREEN_WIDTH);
+    if (newIndex !== index) {
+      setIndex(newIndex);
+      onIndexChange?.(newIndex);
+    }
+  };
+
+  const renderItem = ({ item }: { item: SliderImage }) => (
+    <TouchableOpacity activeOpacity={0.9}>
+      {/* Android needs overflow hidden to clip rounded corners */}
+      <View style={{ width: SCREEN_WIDTH, height, borderRadius: rounded, overflow: "hidden" }}>
+        <Image source={{ uri: item.uri }} style={{ width: "100%", height: "100%" }} resizeMode="cover" />
+      </View>
+    </TouchableOpacity>
+  );
+
+  const serviceCategories = [
+    { id: "cleaning", title: "Cleaning", icon: "cleaning-services", color: "#10b981", description: "House cleaning, deep cleaning" },
+    { id: "repairs", title: "Repairs", icon: "build", color: "#f59e0b", description: "Home repairs, maintenance" },
+    { id: "plumbing", title: "Plumbing", icon: "plumbing", color: "#3b82f6", description: "Pipe repairs, installations" },
+    { id: "electrical", title: "Electrical", icon: "electrical-services", color: "#ef4444", description: "Wiring, appliance repair" },
+    { id: "painting", title: "Painting", icon: "format-paint", color: "#8b5cf6", description: "Wall painting, touch-ups" },
+    { id: "carpentry", title: "Carpentry", icon: "carpenter", color: "#f97316", description: "Furniture, wood work" },
+  ];
+
   const handleCategoryPress = (categoryId: string) => {
     router.push(`/category/${categoryId}`);
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {/* Header Section */}
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.greeting}>Hello!</Text>
           <Text style={styles.subtitle}>What service do you need today?</Text>
@@ -82,35 +126,52 @@ export default function HomeScreen() {
           <Text style={styles.searchText}>Search for services</Text>
         </TouchableOpacity>
 
-        {/* Popular Services Banner */}
-        <View style={styles.bannerContainer}>
-          <View style={styles.banner}>
-            <View style={styles.bannerContent}>
-              <Text style={styles.bannerTitle}>Quick Book</Text>
-              <Text style={styles.bannerSubtitle}>Book your regular services</Text>
-            </View>
-            <MaterialIcons name="flash-on" size={40} color="#fbbf24" />
+        {/* Slider */}
+        {count > 0 ? (
+          <View style={{ position: "relative", marginHorizontal: 20, marginBottom: 20 }}>
+            <FlatList
+              ref={listRef}
+              data={images}
+              renderItem={renderItem}
+              keyExtractor={(it) => it.id}
+              horizontal
+              pagingEnabled
+              nestedScrollEnabled
+              showsHorizontalScrollIndicator={false}
+              onMomentumScrollEnd={onMomentumEnd}
+              getItemLayout={(_, i) => ({ length: SCREEN_WIDTH, offset: SCREEN_WIDTH * i, index: i })}
+              removeClippedSubviews={Platform.OS === "android"}
+              windowSize={3}
+            />
+            {showDots && (
+              <View style={styles.dotsWrap}>
+                {images.map((_, i) => (
+                  <View key={i} style={[styles.dot, i === index ? styles.dotActive : styles.dotInactive, i !== 0 && { marginLeft: 6 }]} />
+                ))}
+              </View>
+            )}
           </View>
-        </View>
+        ) : (
+          // Optional skeleton/placeholder state
+          <View style={{ height, marginHorizontal: 20, marginBottom: 20, justifyContent: "center", alignItems: "center", backgroundColor: "#f3f4f6", borderRadius: rounded }}>
+            <Text style={{ color: "#9ca3af" }}>No images</Text>
+          </View>
+        )}
 
         {/* Service Categories */}
         <View style={styles.categoriesSection}>
           <Text style={styles.sectionTitle}>All Services</Text>
-          <View style={styles.categoriesGrid}>
-            {serviceCategories.map((category) => (
+          <View>
+            {serviceCategories.map((category, idx) => (
               <TouchableOpacity
                 key={category.id}
-                style={[styles.categoryCard, { borderLeftColor: category.color }]}
+                style={[styles.categoryCard, { borderLeftColor: category.color }, idx !== 0 && { marginTop: 12 }]}
                 onPress={() => handleCategoryPress(category.id)}
                 activeOpacity={0.7}
               >
                 <View style={styles.categoryContent}>
                   <View style={[styles.iconContainer, { backgroundColor: `${category.color}15` }]}>
-                    <MaterialIcons
-                      name={category.icon as any}
-                      size={32}
-                      color={category.color}
-                    />
+                    <MaterialIcons name={category.icon as any} size={32} color={category.color} />
                   </View>
                   <View style={styles.categoryInfo}>
                     <Text style={styles.categoryTitle}>{category.title}</Text>
@@ -127,7 +188,7 @@ export default function HomeScreen() {
         <View style={styles.recentSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Bookings</Text>
-            <TouchableOpacity onPress={() => router.push('/bookings')}>
+            <TouchableOpacity onPress={() => router.push("/bookings")}>
               <Text style={styles.viewAllText}>View All</Text>
             </TouchableOpacity>
           </View>
@@ -147,175 +208,83 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8fafc',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 20,
-  },
-  header: {
-    padding: 20,
-    backgroundColor: '#6366f1',
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#e0e7ff',
-  },
+  container: { flex: 1, backgroundColor: "#f8fafc" },
+  scrollView: { flex: 1 },
+  scrollContent: { paddingBottom: 20 },
+  header: { padding: 20, backgroundColor: "#6366f1", borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+  greeting: { fontSize: 24, fontWeight: "700", color: "#fff", marginBottom: 4 },
+  subtitle: { fontSize: 16, color: "#e0e7ff" },
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     margin: 20,
     marginTop: -20,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-  searchText: {
-    marginLeft: 12,
-    fontSize: 16,
-    color: '#9ca3af',
-    flex: 1,
+  searchText: { marginLeft: 12, fontSize: 16, color: "#9ca3af", flex: 1 },
+  dotsWrap: {
+    position: "absolute",
+    bottom: 12,
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 12,
   },
-  bannerContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  banner: {
-    backgroundColor: '#1f2937',
-    borderRadius: 16,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  bannerContent: {
-    flex: 1,
-  },
-  bannerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 4,
-  },
-  bannerSubtitle: {
-    fontSize: 14,
-    color: '#9ca3af',
-  },
-  categoriesSection: {
-    padding: 20,
-  },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#1f2937',
-    marginBottom: 16,
-  },
-  categoriesGrid: {
-    gap: 12,
-  },
+  dot: { height: 8, borderRadius: 4 },
+  dotActive: { width: 16, backgroundColor: "rgba(255,255,255,0.95)" },
+  dotInactive: { width: 8, backgroundColor: "rgba(255,255,255,0.5)" },
+  categoriesSection: { padding: 20 },
+  sectionTitle: { fontSize: 20, fontWeight: "700", color: "#1f2937", marginBottom: 16 },
   categoryCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     borderLeftWidth: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  categoryContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-  },
+  categoryContent: { flexDirection: "row", alignItems: "center", padding: 16 },
   iconContainer: {
     width: 56,
     height: 56,
     borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 16,
   },
-  categoryInfo: {
-    flex: 1,
-  },
-  categoryTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  categoryDescription: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  recentSection: {
-    padding: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  viewAllText: {
-    fontSize: 14,
-    color: '#6366f1',
-    fontWeight: '600',
-  },
+  categoryInfo: { flex: 1 },
+  categoryTitle: { fontSize: 16, fontWeight: "600", color: "#1f2937", marginBottom: 4 },
+  categoryDescription: { fontSize: 14, color: "#6b7280" },
+  recentSection: { padding: 20 },
+  sectionHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 },
+  viewAllText: { fontSize: 14, color: "#6366f1", fontWeight: "600" },
   recentCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  recentInfo: {
-    flex: 1,
-  },
-  recentTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1f2937',
-    marginBottom: 4,
-  },
-  recentDate: {
-    fontSize: 14,
-    color: '#6b7280',
-  },
-  rebookButton: {
-    backgroundColor: '#6366f1',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  rebookText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
+  recentInfo: { flex: 1 },
+  recentTitle: { fontSize: 16, fontWeight: "600", color: "#1f2937", marginBottom: 4 },
+  recentDate: { fontSize: 14, color: "#6b7280" },
+  rebookButton: { backgroundColor: "#6366f1", paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8 },
+  rebookText: { color: "#fff", fontSize: 14, fontWeight: "600" },
 });

@@ -43,7 +43,7 @@ interface ProviderDetail {
 const providerDetails: { [key: string]: ProviderDetail } = {
   '1': {
     id: '1',
-    name: 'Sarah Johnson',
+    name: 'Alok Sahu',
     rating: 4.9,
     reviewCount: 127,
     price: 80,
@@ -59,7 +59,7 @@ const providerDetails: { [key: string]: ProviderDetail } = {
     reviews: [
       {
         id: '1',
-        userName: 'Michael K.',
+        userName: 'Rohit',
         rating: 5,
         comment: 'Sarah did an amazing job! Very thorough and professional. My house looks spotless.',
         date: 'Dec 20, 2024',
@@ -75,7 +75,7 @@ const providerDetails: { [key: string]: ProviderDetail } = {
       },
       {
         id: '3',
-        userName: 'David R.',
+        userName: 'Hardik Singh',
         rating: 4,
         comment: 'Good service overall. Sarah was punctual and did a thorough job cleaning.',
         date: 'Dec 15, 2024',
@@ -85,7 +85,7 @@ const providerDetails: { [key: string]: ProviderDetail } = {
   },
   '4': {
     id: '4',
-    name: 'Mike Wilson',
+    name: 'Rajesh Kr. Sahu',
     rating: 4.9,
     reviewCount: 156,
     price: 120,
@@ -101,7 +101,7 @@ const providerDetails: { [key: string]: ProviderDetail } = {
     reviews: [
       {
         id: '4',
-        userName: 'Jennifer T.',
+        userName: 'Sayantan Bhadra',
         rating: 5,
         comment: 'Mike fixed our door perfectly. Very professional and cleaned up after himself.',
         date: 'Dec 22, 2024',
