@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,75 +8,31 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { apiService, Booking } from '../../src/services/api';
 
 type BookingStatus = 'upcoming' | 'completed' | 'cancelled';
 
-interface Booking {
-  id: string;
-  serviceName: string;
-  providerName: string;
-  date: string;
-  time: string;
-  status: BookingStatus;
-  price: number;
-  address: string;
-  rating?: number;
-}
-
-const mockBookings: Booking[] = [
-  {
-    id: '1',
-    serviceName: 'House Cleaning',
-    providerName: 'Dipika Roy',
-    date: 'Dec 28, 2024',
-    time: '10:00 AM',
-    status: 'upcoming',
-    price: 80,
-    address: '123 Main St, Apt 4B',
-  },
-  {
-    id: '2',
-    serviceName: 'Plumbing Repair',
-    providerName: 'Varun Singh',
-    date: 'Dec 25, 2024',
-    time: '2:00 PM',
-    status: 'upcoming',
-    price: 120,
-    address: '123 Main St, Apt 4B',
-  },
-  {
-    id: '3',
-    serviceName: 'House Cleaning',
-    providerName: 'Dipika Roy',
-    date: 'Dec 15, 2024',
-    time: '10:00 AM',
-    status: 'completed',
-    price: 80,
-    address: '123 Main St, Apt 4B',
-    rating: 5,
-  },
-  {
-    id: '4',
-    serviceName: 'Electrical Work',
-    providerName: 'Ravi Kumar',
-    date: 'Dec 10, 2024',
-    time: '3:00 PM',
-    status: 'completed',
-    price: 150,
-    address: '123 Main St, Apt 4B',
-    rating: 4,
-  },
-];
-
 export default function BookingsScreen() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed'>('upcoming');
+  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredBookings = mockBookings.filter((booking) => {
-    if (activeTab === 'upcoming') {
-      return booking.status === 'upcoming';
-    }
-    return booking.status === 'completed';
-  });
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoading(true);
+      const token = await AsyncStorage.getItem('access_token');
+      if (!token) { setBookings([]); setLoading(false); return; }
+      const res = await apiService.listMyBookings(token);
+      if (!mounted) return;
+      if (res.success && res.data) setBookings(res.data);
+      setLoading(false);
+    })();
+    return () => { mounted = false; };
+  }, []);
+
+  const filteredBookings = bookings.filter((b) => activeTab === 'upcoming' ? b.status === 'upcoming' : b.status === 'completed');
 
   const getStatusColor = (status: BookingStatus) => {
     switch (status) {
@@ -89,17 +45,6 @@ export default function BookingsScreen() {
       default:
         return '#6b7280';
     }
-  };
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, index) => (
-      <MaterialIcons
-        key={index}
-        name="star"
-        size={16}
-        color={index < rating ? '#fbbf24' : '#e5e7eb'}
-      />
-    ));
   };
 
   return (
@@ -140,8 +85,8 @@ export default function BookingsScreen() {
               <View key={booking.id} style={styles.bookingCard}>
                 <View style={styles.bookingHeader}>
                   <View style={styles.bookingInfo}>
-                    <Text style={styles.serviceName}>{booking.serviceName}</Text>
-                    <Text style={styles.providerName}>{booking.providerName}</Text>
+                    <Text style={styles.serviceName}>Service #{booking.serviceId}</Text>
+                    <Text style={styles.providerName}>{booking.address}</Text>
                   </View>
                   <View
                     style={[
@@ -163,45 +108,9 @@ export default function BookingsScreen() {
                     </Text>
                   </View>
                   <View style={styles.detailRow}>
-                    <MaterialIcons name="location-on" size={16} color="#6b7280" />
-                    <Text style={styles.detailText}>{booking.address}</Text>
-                  </View>
-                  <View style={styles.detailRow}>
                     <MaterialIcons name="attach-money" size={16} color="#6b7280" />
-                    <Text style={styles.detailText}>${booking.price}</Text>
+                    <Text style={styles.detailText}>₹{booking.price}</Text>
                   </View>
-                  {booking.rating && (
-                    <View style={styles.detailRow}>
-                      <View style={styles.ratingContainer}>
-                        {renderStars(booking.rating)}
-                        <Text style={styles.ratingText}>({booking.rating}.0)</Text>
-                      </View>
-                    </View>
-                  )}
-                </View>
-
-                <View style={styles.bookingActions}>
-                  {booking.status === 'upcoming' ? (
-                    <>
-                      <TouchableOpacity style={styles.actionButton}>
-                        <Text style={styles.actionButtonText}>Reschedule</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={[styles.actionButton, styles.cancelButton]}>
-                        <Text style={[styles.actionButtonText, styles.cancelButtonText]}>
-                          Cancel
-                        </Text>
-                      </TouchableOpacity>
-                    </>
-                  ) : (
-                    <>
-                      <TouchableOpacity style={styles.actionButton}>
-                        <Text style={styles.actionButtonText}>Rebook</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity style={styles.actionButton}>
-                        <Text style={styles.actionButtonText}>Write Review</Text>
-                      </TouchableOpacity>
-                    </>
-                  )}
                 </View>
               </View>
             ))}
@@ -326,38 +235,5 @@ const styles = StyleSheet.create({
     color: '#4b5563',
     marginLeft: 8,
     flex: 1,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 8,
-  },
-  ratingText: {
-    fontSize: 14,
-    color: '#4b5563',
-    marginLeft: 8,
-  },
-  bookingActions: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  actionButton: {
-    flex: 1,
-    backgroundColor: '#f3f4f6',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  cancelButton: {
-    backgroundColor: '#fef2f2',
-  },
-  cancelButtonText: {
-    color: '#dc2626',
   },
 });

@@ -208,21 +208,22 @@ export default function HomeScreen({
 								What service do you need today?
 							</Text>
 						</View>
-						{/* {isAuthenticated ? (
-							<TouchableOpacity
-								onPress={handleLogout}
-								style={styles.logoutButton}
-							>
-								<MaterialIcons name="logout" size={24} color="#fff" />
-							</TouchableOpacity>
-						) : (
-							<TouchableOpacity
-								onPress={() => router.push("/auth/login")}
-								style={styles.loginButton}
-							>
-								<Text style={styles.loginButtonText}>Sign In</Text>
-							</TouchableOpacity>
-						)} */}
+						{user?.role === 'admin' && (
+							<View style={{ flexDirection: 'row', gap: 8 }}>
+								<TouchableOpacity
+									onPress={() => router.push('/provider/add-service')}
+									style={{ paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#22c55e', borderRadius: 8 }}
+								>
+									<Text style={{ color: '#fff', fontWeight: '700' }}>Add Service</Text>
+								</TouchableOpacity>
+								<TouchableOpacity
+									onPress={() => router.push('/admin/dashboard')}
+									style={{ paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#0ea5e9', borderRadius: 8 }}
+								>
+									<Text style={{ color: '#fff', fontWeight: '700' }}>Dashboard</Text>
+								</TouchableOpacity>
+							</View>
+						)}
 					</View>
 				</View>
 

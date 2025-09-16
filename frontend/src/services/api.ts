@@ -35,6 +35,51 @@ export interface AuthResponse {
   refreshToken: string;
 }
 
+export interface Service {
+  id: number;
+  name: string;
+  description?: string;
+  price: number;
+  serviceType?: string;
+  durationMinutes?: number;
+  availability: boolean;
+  timeSlots?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface CreateServiceRequest {
+  name: string;
+  description?: string;
+  price: number;
+  serviceType?: string;
+  durationMinutes?: number;
+  availability?: boolean;
+  timeSlots?: string;
+}
+
+export interface Booking {
+  id: number;
+  userId: number;
+  serviceId: number;
+  date: string;
+  time: string;
+  address: string;
+  specialInstructions?: string;
+  price: number;
+  status: 'upcoming' | 'completed' | 'cancelled';
+  createdAt?: string;
+}
+
+export interface CreateBookingRequest {
+  serviceId: number;
+  date: string;
+  time: string;
+  address: string;
+  specialInstructions?: string;
+  price: number;
+}
+
 // API Service Class
 class ApiService {
   private baseURL: string;
@@ -129,6 +174,53 @@ class ApiService {
       success: true,
       data: res.data?.data as User,
     };
+  }
+
+  // Services
+  async listServices(limit = 50, offset = 0): Promise<ApiResponse<Service[]>> {
+    const res = await this.request<any>(`${API_CONFIG.ENDPOINTS.SERVICES.LIST}?limit=${limit}&offset=${offset}`, {
+      method: 'GET',
+    });
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Service[] };
+  }
+
+  async getService(id: number): Promise<ApiResponse<Service>> {
+    const res = await this.request<any>(API_CONFIG.ENDPOINTS.SERVICES.DETAIL(id), {
+      method: 'GET',
+    });
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Service };
+  }
+
+  async createService(token: string, payload: CreateServiceRequest): Promise<ApiResponse<Service>> {
+    const res = await this.request<any>(API_CONFIG.ENDPOINTS.SERVICES.CREATE, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Service };
+  }
+
+  // Bookings
+  async createBooking(token: string, payload: CreateBookingRequest): Promise<ApiResponse<Booking>> {
+    const res = await this.request<any>('/bookings', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Booking };
+  }
+
+  async listMyBookings(token: string): Promise<ApiResponse<Booking[]>> {
+    const res = await this.request<any>('/bookings/me', {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Booking[] };
   }
 
   // Health check

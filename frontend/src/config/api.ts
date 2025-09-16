@@ -14,6 +14,10 @@ export const API_CONFIG = {
       PROFILE: '/auth/profile',
     },
     SERVICES: {
+      LIST: '/services',
+      DETAIL: (id: number | string) => `/services/${id}`,
+      CREATE: '/services',
+      // legacy placeholders
       CATEGORIES: '/services/categories',
       PROVIDERS: '/services/providers',
       BOOKINGS: '/services/bookings',

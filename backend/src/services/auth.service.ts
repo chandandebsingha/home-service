@@ -18,14 +18,17 @@ export class AuthService {
         throw new Error('User with this email already exists');
       }
 
-      // 2. Create user in Supabase Auth and capture UID
-      const supabaseResult = await SupabaseService.signUp(
+      // 2. Create user in Supabase via admin API and capture UID
+      const adminUser = await SupabaseService.adminCreateUser(
         userData.email,
         userData.password,
         { fullName: userData.fullName }
       );
 
-      const supabaseUid = supabaseResult.user?.id;
+      const supabaseUid = adminUser?.id;
+      if (!supabaseUid) {
+        throw new Error('Failed to obtain Supabase UID');
+      }
 
       // 3. Hash the password for our local DB
       const saltRounds = 12;
@@ -37,7 +40,7 @@ export class AuthService {
         passwordHash: passwordHash,
         fullName: userData.fullName,
         supabaseUid: supabaseUid,
-        isEmailVerified: false, // Will be verified via email confirmation
+        isEmailVerified: true,
       };
 
       const [user] = await db.insert(users).values(newUser).returning();
@@ -53,47 +56,32 @@ export class AuthService {
   }
 
   static async login(loginData: LoginRequest) {
-    try {
-      // 1. Get user from our database
+    try
+    {
+      // 1. Find user by email
       const user = await db.query.users.findFirst({
         where: eq(users.email, loginData.email),
       });
 
-      if (!user) {
-        throw new Error('Invalid credentials');
+      if (!user || !user.passwordHash) {
+        throw new Error('Invalid email or password');
       }
 
-      // 2. Verify password. If missing local hash, attempt Supabase sign-in then backfill hash
-      if (!user.passwordHash) {
-        // Try Supabase auth as a fallback for legacy users
-        const supa = await SupabaseService.signIn(loginData.email, loginData.password);
-        if (!supa || !supa.user) {
-          throw new Error('Invalid credentials');
-        }
-        // Backfill local password hash and supabase uid if needed
-        const newHash = await bcrypt.hash(loginData.password, 12);
-        await db.update(users)
-          .set({ passwordHash: newHash, supabaseUid: user.supabaseUid || supa.user.id })
-          .where(eq(users.id, user.id));
-        user.passwordHash = newHash;
+      // 2. Verify password
+      const isValid = await bcrypt.compare(loginData.password, user.passwordHash);
+      if (!isValid) {
+        throw new Error('Invalid email or password');
       }
 
-      const isPasswordValid = await bcrypt.compare(loginData.password, user.passwordHash);
-      if (!isPasswordValid) {
-        throw new Error('Invalid credentials');
-      }
-
-      // 3. Update last login
-      await db.update(users)
-        .set({ lastLogin: new Date() })
-        .where(eq(users.id, user.id));
-
-      // 4. Generate tokens
+      // 3. Generate tokens
       const accessToken = JwtService.generateAccessToken(user.id, user.email, user.role!);
       const refreshToken = JwtService.generateRefreshToken(user.id, user.email, user.role!);
 
+      // 4. Return tokens and user
       return { user, accessToken, refreshToken };
-    } catch (error) {
+    }
+    catch (error)
+    {
       throw error;
     }
   }

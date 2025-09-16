@@ -15,6 +15,27 @@
       "when": 1757913291134,
       "tag": "0001_melodic_jean_grey",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1758005952536,
+      "tag": "0002_new_the_liberteens",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1758006237041,
+      "tag": "0003_abnormal_the_professor",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1758007876812,
+      "tag": "0004_long_jazinda",
+      "breakpoints": true
     }
   ]
 }

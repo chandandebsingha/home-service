@@ -14,6 +14,8 @@
     "db:studio": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
     "db:setup": "node setup-env.js",
+    "db:backfill:supabaseUid": "ts-node src/scripts/backfill-supabase-uid.ts",
+    "seed:admin": "ts-node src/scripts/seed-admin.ts",
     "lint": "eslint src/**/*.ts",
     "lint:fix": "eslint src/**/*.ts --fix",
     "test": "jest",

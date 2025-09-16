@@ -3,6 +3,9 @@ import cors from 'cors';
 import { config } from './types/config';
 import authRoutes from './routes/auth.routes';
 import { errorHandler, jsonErrorHandler } from './middleware/error.middleware';
+import servicesRoutes from './routes/services.routes';
+import bookingsRoutes from './routes/bookings.routes';
+import adminRoutes from './routes/admin.routes';
 
 const app = express();
 
@@ -32,6 +35,9 @@ app.use(jsonErrorHandler);
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/services', servicesRoutes);
+app.use('/api/bookings', bookingsRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check
 app.get('/', (req, res) => {

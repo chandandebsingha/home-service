@@ -1,0 +1,51 @@
+import { Request, Response } from 'express';
+import { ServiceService } from '../services/service.service';
+
+export class ServicesController {
+  static async create(req: Request, res: Response): Promise<void> {
+    try {
+      const body = req.body;
+      const created = await ServiceService.create({
+        name: body.name,
+        description: body.description,
+        price: body.price,
+        serviceType: body.serviceType,
+        durationMinutes: body.durationMinutes,
+        availability: body.availability ?? true,
+        timeSlots: body.timeSlots,
+      });
+      res.status(201).json({ success: true, data: created });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message || 'Failed to create service' });
+    }
+  }
+
+  static async list(req: Request, res: Response): Promise<void> {
+    try {
+      const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 100);
+      const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0;
+      const items = await ServiceService.list(limit, offset);
+      res.status(200).json({ success: true, data: items });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message || 'Failed to list services' });
+    }
+  }
+
+  static async getById(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (Number.isNaN(id)) {
+        res.status(400).json({ success: false, error: 'Invalid id' });
+        return;
+      }
+      const item = await ServiceService.getById(id);
+      if (!item) {
+        res.status(404).json({ success: false, error: 'Service not found' });
+        return;
+      }
+      res.status(200).json({ success: true, data: item });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message || 'Failed to get service' });
+    }
+  }
+}

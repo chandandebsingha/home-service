@@ -13,6 +13,8 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { apiService } from '../../src/services/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface TimeSlot {
   id: string;
@@ -73,6 +75,7 @@ export default function BookingScreen() {
   const [address, setAddress] = useState<string>('123 Main St, Apt 4B');
   const [specialInstructions, setSpecialInstructions] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [submitting, setSubmitting] = useState(false);
 
   const selectedServiceOption = serviceOptions.find(s => s.id === selectedService);
   const totalPrice = selectedServiceOption?.price || 80;
@@ -99,24 +102,35 @@ export default function BookingScreen() {
     }
   };
 
-  const handleBooking = () => {
-    const selectedDateSlot = availableSlots.find(slot => slot.date === selectedDate);
-    const selectedTimeSlot = selectedDateSlot?.timeSlots.find(slot => slot.id === selectedTime);
-    
-    const bookingDetails = {
-      serviceId,
-      service: selectedServiceOption?.name,
-      date: selectedDateSlot?.displayDate,
-      time: selectedTimeSlot?.time,
-      address,
-      specialInstructions,
-      price: totalPrice,
-    };
-
-    router.push({
-      pathname: '/booking/confirmation',
-      params: bookingDetails,
-    });
+  const handleBooking = async () => {
+    try {
+      setSubmitting(true);
+      const selectedDateSlot = availableSlots.find(slot => slot.date === selectedDate);
+      const selectedTimeSlot = selectedDateSlot?.timeSlots.find(slot => slot.id === selectedTime);
+      const token = await AsyncStorage.getItem('access_token');
+      if (!token) {
+        Alert.alert('Login Required', 'Please sign in to book a service.');
+        return;
+      }
+      const price = totalPrice;
+      const payload = {
+        serviceId: Number(serviceId),
+        date: selectedDateSlot?.date || '',
+        time: selectedTimeSlot?.time || '',
+        address,
+        specialInstructions: specialInstructions || undefined,
+        price: Number(price),
+      };
+      const res = await apiService.createBooking(token, payload);
+      if (!res.success) {
+        throw new Error(res.error || 'Failed to create booking');
+      }
+      router.replace('/(tabs)/bookings');
+    } catch (e: any) {
+      Alert.alert('Error', e.message || 'Failed to create booking');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const renderStepIndicator = () => (
@@ -280,7 +294,7 @@ export default function BookingScreen() {
       case 2:
         return 'Continue to Details';
       case 3:
-        return `Book Now - ₹ ${totalPrice}`;
+        return submitting ? 'Booking...' : `Book Now - ₹ ${totalPrice}`;
       default:
         return 'Continue';
     }
@@ -314,6 +328,7 @@ export default function BookingScreen() {
           <TouchableOpacity
             style={[styles.continueButton, currentStep > 1 && styles.continueButtonSmall]}
             onPress={handleContinue}
+            disabled={submitting}
           >
             <Text style={styles.continueButtonText}>{getButtonText()}</Text>
           </TouchableOpacity>
