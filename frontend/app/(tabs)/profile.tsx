@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { router } from 'expo-router';
 
 const profileOptions = [
   {
@@ -44,6 +46,8 @@ const profileOptions = [
 ];
 
 export default function ProfileScreen() {
+  const { user, isAuthenticated, logout, isLoading } = useAuth();
+
   const handleOptionPress = (optionId: string) => {
     Alert.alert('Feature', `${optionId} feature will be implemented soon!`);
   };
@@ -54,10 +58,42 @@ export default function ProfileScreen() {
       'Are you sure you want to logout?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive' },
+        { text: 'Logout', onPress: logout, style: 'destructive' },
       ]
     );
   };
+
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loginPromptContainer}>
+          <MaterialIcons name="account-circle" size={80} color="#9ca3af" />
+          <Text style={styles.loginPromptTitle}>Please Sign In</Text>
+          <Text style={styles.loginPromptText}>
+            Sign in to view your profile and manage your account
+          </Text>
+          <TouchableOpacity 
+            style={styles.signInButton}
+            onPress={() => router.push('/auth/login')}
+          >
+            <Text style={styles.signInButtonText}>Sign In</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -65,11 +101,14 @@ export default function ProfileScreen() {
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>JD</Text>
+            <Text style={styles.avatarText}>
+              {user ? `${user.fullName.split(' ')[0].charAt(0)}${(user.fullName.split(' ')[1] || '').charAt(0)}` : 'U'}
+            </Text>
           </View>
-          <Text style={styles.userName}>Chandan Singha</Text>
-          <Text style={styles.userEmail}>chandan@gmail.com</Text>
-          <Text style={styles.userPhone}>+91 9003384394</Text>
+          <Text style={styles.userName}>
+            {user ? user.fullName : 'User'}
+          </Text>
+          <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
           
           <TouchableOpacity style={styles.editButton}>
             <MaterialIcons name="edit" size={16} color="#6366f1" />
@@ -318,5 +357,45 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#ef4444',
     marginLeft: 8,
+  },
+  loginPromptContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  loginPromptTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#1f2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  loginPromptText: {
+    fontSize: 16,
+    color: '#6b7280',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 24,
+  },
+  signInButton: {
+    backgroundColor: '#6366f1',
+    paddingHorizontal: 32,
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  signInButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#6b7280',
   },
 });
