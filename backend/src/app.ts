@@ -16,6 +16,7 @@ app.use(cors({
     const allowed = [
       'http://localhost:8081',
       'http://localhost:19006',
+      'http://localhost:3000',
     ];
     if (!origin) return callback(null, true); // mobile fetch often has no Origin
     if (allowed.includes(origin) || origin.startsWith('exp://') || /http:\/\/\d+\.\d+\.\d+\.\d+(:\d+)?/.test(origin)) {

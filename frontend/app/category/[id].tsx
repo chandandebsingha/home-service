@@ -17,20 +17,18 @@ export default function CategoryScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const categoryId = (id || '').toString();
+  const categoryIdParam = (id || '').toString();
+  const categoryId = Number.isNaN(Number(categoryIdParam)) ? undefined : Number(categoryIdParam);
 
   useEffect(() => {
     let mounted = true;
     (async () => {
       setLoading(true);
       setError(null);
-      const res = await apiService.listServices(100, 0);
+      const res = await apiService.listServices(100, 0, { categoryId });
       if (!mounted) return;
       if (res.success && res.data) {
-        const filtered = res.data.filter((s) =>
-          categoryId ? (s.serviceType || '').toLowerCase() === categoryId.toLowerCase() : true
-        );
-        setServices(filtered);
+        setServices(res.data);
       } else {
         setError(res.error || 'Failed to load services');
       }
@@ -55,7 +53,7 @@ export default function CategoryScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={styles.title}>{categoryId.charAt(0).toUpperCase() + categoryId.slice(1)} Services</Text>
+          <Text style={styles.title}>Services</Text>
           <Text style={styles.subtitle}>
             {loading ? 'Loading…' : `${services.length} services available`}
           </Text>

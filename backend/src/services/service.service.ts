@@ -1,6 +1,6 @@
 import { db } from '../db';
 import * as schema from '../../drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 export class ServiceService {
   static ensureTable() {
@@ -16,9 +16,15 @@ export class ServiceService {
     return created;
   }
 
-  static async list(limit = 50, offset = 0) {
+  static async list(limit = 50, offset = 0, filters?: { categoryId?: number; serviceTypeId?: number }) {
     const services = this.ensureTable();
-    const all = await db.select().from(services).limit(limit).offset(offset);
+    const whereClauses = [] as any[];
+    if (filters?.categoryId) whereClauses.push(eq(services.categoryId, filters.categoryId));
+    if (filters?.serviceTypeId) whereClauses.push(eq(services.serviceTypeId, filters.serviceTypeId));
+    const where = whereClauses.length === 0 ? undefined : (whereClauses.length === 1 ? whereClauses[0] : and(...whereClauses));
+    const query = db.select().from(services).limit(limit).offset(offset);
+    // drizzle allows conditionally adding where
+    const all = where ? await query.where(where) : await query;
     return all;
   }
 
