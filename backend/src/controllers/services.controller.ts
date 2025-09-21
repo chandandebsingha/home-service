@@ -10,6 +10,8 @@ export class ServicesController {
         description: body.description,
         price: body.price,
         serviceType: body.serviceType,
+        categoryId: body.categoryId,
+        serviceTypeId: body.serviceTypeId,
         durationMinutes: body.durationMinutes,
         availability: body.availability ?? true,
         timeSlots: body.timeSlots,
@@ -24,7 +26,9 @@ export class ServicesController {
     try {
       const limit = Math.min(parseInt(String(req.query.limit ?? '50'), 10) || 50, 100);
       const offset = parseInt(String(req.query.offset ?? '0'), 10) || 0;
-      const items = await ServiceService.list(limit, offset);
+      const categoryId = req.query.categoryId ? parseInt(String(req.query.categoryId), 10) : undefined;
+      const serviceTypeId = req.query.serviceTypeId ? parseInt(String(req.query.serviceTypeId), 10) : undefined;
+      const items = await ServiceService.list(limit, offset, { categoryId, serviceTypeId });
       res.status(200).json({ success: true, data: items });
     } catch (error: any) {
       res.status(500).json({ success: false, error: error.message || 'Failed to list services' });

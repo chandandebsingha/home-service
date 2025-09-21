@@ -1,4 +1,4 @@
-CREATE TABLE "services" (
+CREATE TABLE IF NOT EXISTS "services" (
 	"id" serial PRIMARY KEY NOT NULL,
 	"name" text NOT NULL,
 	"description" text,
