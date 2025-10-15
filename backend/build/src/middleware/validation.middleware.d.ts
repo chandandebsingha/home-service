@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction } from "express";
 export interface ValidationRule {
     field: string;
     validator: (value: any) => boolean;

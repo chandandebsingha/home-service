@@ -6,6 +6,8 @@ import { errorHandler, jsonErrorHandler } from './middleware/error.middleware';
 import servicesRoutes from './routes/services.routes';
 import bookingsRoutes from './routes/bookings.routes';
 import adminRoutes from './routes/admin.routes';
+import providerRoutes from './routes/provider.routes';
+import occupationRoutes from './routes/occupation.routes';
 
 const app = express();
 
@@ -16,6 +18,7 @@ app.use(cors({
     const allowed = [
       'http://localhost:8081',
       'http://localhost:19006',
+      'http://localhost:3000',
     ];
     if (!origin) return callback(null, true); // mobile fetch often has no Origin
     if (allowed.includes(origin) || origin.startsWith('exp://') || /http:\/\/\d+\.\d+\.\d+\.\d+(:\d+)?/.test(origin)) {
@@ -38,6 +41,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/provider', providerRoutes);
+app.use('/api/occupations', occupationRoutes);
 
 // Health check
 app.get('/', (req, res) => {

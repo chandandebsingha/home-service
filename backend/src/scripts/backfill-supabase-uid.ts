@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { db } from '../db';
-import { users } from '../../drizzle/schema';
+import { users } from '../../build/drizzle/schema';
 import { isNull, sql } from 'drizzle-orm';
 
 async function main() {

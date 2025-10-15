@@ -41,6 +41,8 @@ export interface Service {
   description?: string;
   price: number;
   serviceType?: string;
+  categoryId?: number;
+  serviceTypeId?: number;
   durationMinutes?: number;
   availability: boolean;
   timeSlots?: string;
@@ -177,8 +179,11 @@ class ApiService {
   }
 
   // Services
-  async listServices(limit = 50, offset = 0): Promise<ApiResponse<Service[]>> {
-    const res = await this.request<any>(`${API_CONFIG.ENDPOINTS.SERVICES.LIST}?limit=${limit}&offset=${offset}`, {
+  async listServices(limit = 50, offset = 0, filters?: { categoryId?: number; serviceTypeId?: number }): Promise<ApiResponse<Service[]>> {
+    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
+    if (filters?.categoryId != null) params.append('categoryId', String(filters.categoryId));
+    if (filters?.serviceTypeId != null) params.append('serviceTypeId', String(filters.serviceTypeId));
+    const res = await this.request<any>(`${API_CONFIG.ENDPOINTS.SERVICES.LIST}?${params.toString()}`, {
       method: 'GET',
     });
     if (!res.success) return res;

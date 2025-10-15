@@ -2,7 +2,7 @@ import { LoginRequest, RegisterRequest } from '../types/auth.types';
 export declare class AuthService {
     static register(userData: RegisterRequest): Promise<{
         user: {
-            role: "user" | "admin" | null;
+            role: "user" | "admin" | "partner" | null;
             id: number;
             supabaseUid: string;
             email: string;
@@ -17,7 +17,7 @@ export declare class AuthService {
     }>;
     static login(loginData: LoginRequest): Promise<{
         user: {
-            role: "user" | "admin" | null;
+            role: "user" | "admin" | "partner" | null;
             id: number;
             supabaseUid: string;
             email: string;
@@ -34,7 +34,7 @@ export declare class AuthService {
         success: boolean;
     }>;
     static getProfile(userId: number): Promise<{
-        role: "user" | "admin" | null;
+        role: "user" | "admin" | "partner" | null;
         id: number;
         supabaseUid: string;
         email: string;

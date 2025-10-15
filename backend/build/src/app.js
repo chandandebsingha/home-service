@@ -8,12 +8,17 @@ const cors_1 = __importDefault(require("cors"));
 const auth_routes_1 = __importDefault(require("./routes/auth.routes"));
 const error_middleware_1 = require("./middleware/error.middleware");
 const services_routes_1 = __importDefault(require("./routes/services.routes"));
+const bookings_routes_1 = __importDefault(require("./routes/bookings.routes"));
+const admin_routes_1 = __importDefault(require("./routes/admin.routes"));
+const provider_routes_1 = __importDefault(require("./routes/provider.routes"));
+const occupation_routes_1 = __importDefault(require("./routes/occupation.routes"));
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)({
     origin: (origin, callback) => {
         const allowed = [
             'http://localhost:8081',
             'http://localhost:19006',
+            'http://localhost:3000',
         ];
         if (!origin)
             return callback(null, true);
@@ -31,6 +36,10 @@ app.use(express_1.default.urlencoded({ extended: true }));
 app.use(error_middleware_1.jsonErrorHandler);
 app.use('/api/auth', auth_routes_1.default);
 app.use('/api/services', services_routes_1.default);
+app.use('/api/bookings', bookings_routes_1.default);
+app.use('/api/admin', admin_routes_1.default);
+app.use('/api/provider', provider_routes_1.default);
+app.use('/api/occupations', occupation_routes_1.default);
 app.get('/', (req, res) => {
     res.json({
         success: true,
