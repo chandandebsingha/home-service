@@ -11,6 +11,8 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { apiService, Service, Booking } from '@/src/services/api';
+import { testApiConnection } from '@/src/utils/testConnection';
 
 interface DashboardStats {
 	totalServices: number;
@@ -21,17 +23,13 @@ interface DashboardStats {
 	monthlyEarnings: number;
 }
 
-interface RecentBooking {
-	id: string;
-	serviceName: string;
-	customerName: string;
-	date: string;
-	status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-	amount: number;
+interface RecentBooking extends Booking {
+	serviceName?: string;
+	customerName?: string;
 }
 
 export default function PartnerDashboard() {
-	const { user, isAuthenticated } = useAuth();
+	const { user, isAuthenticated, accessToken } = useAuth();
 	const [stats, setStats] = useState<DashboardStats>({
 		totalServices: 0,
 		activeServices: 0,
@@ -44,43 +42,6 @@ export default function PartnerDashboard() {
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
 
-	// Mock data for demonstration
-	const mockStats: DashboardStats = {
-		totalServices: 5,
-		activeServices: 4,
-		totalBookings: 23,
-		pendingBookings: 3,
-		completedBookings: 18,
-		monthlyEarnings: 2450,
-	};
-
-	const mockRecentBookings: RecentBooking[] = [
-		{
-			id: '1',
-			serviceName: 'House Cleaning',
-			customerName: 'John Doe',
-			date: '2024-01-20',
-			status: 'pending',
-			amount: 150,
-		},
-		{
-			id: '2',
-			serviceName: 'Plumbing Repair',
-			customerName: 'Jane Smith',
-			date: '2024-01-19',
-			status: 'confirmed',
-			amount: 200,
-		},
-		{
-			id: '3',
-			serviceName: 'Electrical Work',
-			customerName: 'Mike Johnson',
-			date: '2024-01-18',
-			status: 'completed',
-			amount: 300,
-		},
-	];
-
 	useEffect(() => {
 		loadDashboardData();
 	}, []);
@@ -88,12 +49,81 @@ export default function PartnerDashboard() {
 	const loadDashboardData = async () => {
 		try {
 			setLoading(true);
-			// Simulate API call
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			setStats(mockStats);
-			setRecentBookings(mockRecentBookings);
+			if (!accessToken) {
+				setStats({
+					totalServices: 0,
+					activeServices: 0,
+					totalBookings: 0,
+					pendingBookings: 0,
+					completedBookings: 0,
+					monthlyEarnings: 0,
+				});
+				setRecentBookings([]);
+				return;
+			}
+
+			console.log('Loading dashboard data with token:', accessToken ? 'present' : 'missing');
+
+			// Test API connection first
+			const connectionTest = await testApiConnection();
+			if (!connectionTest.success) {
+				console.error('API connection failed:', connectionTest.error);
+				Alert.alert('Connection Error', `Cannot connect to server: ${connectionTest.error}`);
+				return;
+			}
+
+			// Load services and bookings in parallel
+			const [servicesRes, bookingsRes] = await Promise.all([
+				apiService.listMyServices(accessToken),
+				apiService.listMyBookings(accessToken)
+			]);
+
+			// Calculate stats from services
+			const services = servicesRes.success ? servicesRes.data || [] : [];
+			const bookings = bookingsRes.success ? bookingsRes.data || [] : [];
+			
+			// Log any API errors for debugging
+			if (!servicesRes.success) {
+				console.error('Failed to load services:', servicesRes.error);
+			}
+			if (!bookingsRes.success) {
+				console.error('Failed to load bookings:', bookingsRes.error);
+			}
+			
+			const totalServices = services.length;
+			const activeServices = services.filter(s => s.availability).length;
+			const totalBookings = bookings.length;
+			const pendingBookings = bookings.filter(b => b.status === 'upcoming').length;
+			const completedBookings = bookings.filter(b => b.status === 'completed').length;
+			
+			// Calculate monthly earnings (sum of completed bookings)
+			const monthlyEarnings = bookings
+				.filter(b => b.status === 'completed')
+				.reduce((sum, b) => sum + b.price, 0);
+
+			setStats({
+				totalServices,
+				activeServices,
+				totalBookings,
+				pendingBookings,
+				completedBookings,
+				monthlyEarnings,
+			});
+
+			// Set recent bookings (last 5)
+			const recent = bookings
+				.sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime())
+				.slice(0, 5)
+				.map(booking => ({
+					...booking,
+					serviceName: services.find(s => s.id === booking.serviceId)?.name || 'Unknown Service',
+					customerName: 'Customer', // We don't have customer info in the booking
+				}));
+			
+			setRecentBookings(recent);
 		} catch (error) {
-			Alert.alert('Error', 'Failed to load dashboard data');
+			console.error('Dashboard data loading error:', error);
+			Alert.alert('Error', 'Failed to load dashboard data. Please check if the backend server is running.');
 		} finally {
 			setLoading(false);
 		}
@@ -105,7 +135,9 @@ export default function PartnerDashboard() {
 		setRefreshing(false);
 	};
 
-	const handleBookingAction = (bookingId: string, action: 'accept' | 'reject' | 'complete') => {
+	const handleBookingAction = async (bookingId: string, action: 'accept' | 'reject' | 'complete') => {
+		if (!accessToken) return;
+		
 		Alert.alert(
 			'Confirm Action',
 			`Are you sure you want to ${action} this booking?`,
@@ -113,18 +145,28 @@ export default function PartnerDashboard() {
 				{ text: 'Cancel', style: 'cancel' },
 				{
 					text: action === 'accept' ? 'Accept' : action === 'reject' ? 'Reject' : 'Complete',
-					onPress: () => {
-						// Update booking status
-						setRecentBookings(prev =>
-							prev.map(booking =>
-								booking.id === bookingId
-									? {
-											...booking,
-											status: action === 'accept' ? 'confirmed' : action === 'complete' ? 'completed' : 'cancelled',
-									  }
-									: booking
-							)
-						);
+					onPress: async () => {
+						try {
+							const newStatus = action === 'accept' ? 'upcoming' : action === 'complete' ? 'completed' : 'cancelled';
+							const res = await apiService.updateBookingStatus(accessToken, Number(bookingId), newStatus);
+							
+							if (res.success) {
+								// Update local state
+								setRecentBookings(prev =>
+									prev.map(booking =>
+										booking.id === Number(bookingId)
+											? { ...booking, status: newStatus as any }
+											: booking
+									)
+								);
+								// Refresh dashboard data
+								await loadDashboardData();
+							} else {
+								Alert.alert('Error', res.error || 'Failed to update booking');
+							}
+						} catch (error) {
+							Alert.alert('Error', 'Failed to update booking');
+						}
 					},
 				},
 			]
@@ -133,12 +175,8 @@ export default function PartnerDashboard() {
 
 	const getStatusColor = (status: string) => {
 		switch (status) {
-			case 'pending':
-				return '#f59e0b';
-			case 'confirmed':
+			case 'upcoming':
 				return '#3b82f6';
-			case 'in-progress':
-				return '#8b5cf6';
 			case 'completed':
 				return '#10b981';
 			case 'cancelled':
@@ -179,32 +217,21 @@ export default function PartnerDashboard() {
 				<Text style={styles.bookingDate}>{booking.date}</Text>
 				<Text style={styles.bookingAmount}>${booking.amount}</Text>
 			</View>
-			{booking.status === 'pending' && (
-				<View style={styles.bookingActions}>
-					<TouchableOpacity
-						style={[styles.actionButton, styles.acceptButton]}
-						onPress={() => handleBookingAction(booking.id, 'accept')}
-					>
-						<MaterialIcons name="check" size={16} color="#fff" />
-						<Text style={styles.actionButtonText}>Accept</Text>
-					</TouchableOpacity>
-					<TouchableOpacity
-						style={[styles.actionButton, styles.rejectButton]}
-						onPress={() => handleBookingAction(booking.id, 'reject')}
-					>
-						<MaterialIcons name="close" size={16} color="#fff" />
-						<Text style={styles.actionButtonText}>Reject</Text>
-					</TouchableOpacity>
-				</View>
-			)}
-			{booking.status === 'confirmed' && (
+			{booking.status === 'upcoming' && (
 				<View style={styles.bookingActions}>
 					<TouchableOpacity
 						style={[styles.actionButton, styles.completeButton]}
-						onPress={() => handleBookingAction(booking.id, 'complete')}
+						onPress={() => handleBookingAction(booking.id.toString(), 'complete')}
 					>
 						<MaterialIcons name="done" size={16} color="#fff" />
 						<Text style={styles.actionButtonText}>Mark Complete</Text>
+					</TouchableOpacity>
+					<TouchableOpacity
+						style={[styles.actionButton, styles.rejectButton]}
+						onPress={() => handleBookingAction(booking.id.toString(), 'reject')}
+					>
+						<MaterialIcons name="close" size={16} color="#fff" />
+						<Text style={styles.actionButtonText}>Cancel</Text>
 					</TouchableOpacity>
 				</View>
 			)}
@@ -293,6 +320,7 @@ export default function PartnerDashboard() {
 					{loading ? (
 						<View style={styles.centerContainer}>
 							<Text style={styles.loadingText}>Loading bookings...</Text>
+							<Text style={styles.loadingSubtext}>Connecting to server...</Text>
 						</View>
 					) : recentBookings.length === 0 ? (
 						<View style={styles.centerContainer}>
@@ -547,6 +575,11 @@ const styles = StyleSheet.create({
 	loadingText: {
 		fontSize: 16,
 		color: '#6b7280',
+	},
+	loadingSubtext: {
+		fontSize: 14,
+		color: '#9ca3af',
+		marginTop: 4,
 	},
 	emptyMessage: {
 		fontSize: 16,

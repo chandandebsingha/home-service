@@ -1,4 +1,4 @@
-import * as schema from '../../drizzle/schema';
+import { services } from '../../drizzle/schema';
 export declare class ServiceService {
     static ensureTable(): import("drizzle-orm/pg-core").PgTableWithColumns<{
         name: "services";
@@ -123,6 +123,23 @@ export declare class ServiceService {
                 identity: undefined;
                 generated: undefined;
             }, {}, {}>;
+            providerId: import("drizzle-orm/pg-core").PgColumn<{
+                name: "provider_id";
+                tableName: "services";
+                dataType: "number";
+                columnType: "PgInteger";
+                data: number;
+                driverParam: string | number;
+                notNull: false;
+                hasDefault: false;
+                isPrimaryKey: false;
+                isAutoincrement: false;
+                hasRuntimeDefault: false;
+                enumValues: undefined;
+                baseColumn: never;
+                identity: undefined;
+                generated: undefined;
+            }, {}, {}>;
             durationMinutes: import("drizzle-orm/pg-core").PgColumn<{
                 name: "duration_minutes";
                 tableName: "services";
@@ -211,7 +228,7 @@ export declare class ServiceService {
         };
         dialect: "pg";
     }>;
-    static create(newService: typeof schema.services.$inferInsert): Promise<{
+    static create(newService: typeof services.$inferInsert): Promise<{
         id: number;
         name: string;
         createdAt: Date;
@@ -221,6 +238,7 @@ export declare class ServiceService {
         price: number;
         serviceType: string | null;
         serviceTypeId: number | null;
+        providerId: number | null;
         durationMinutes: number | null;
         availability: boolean;
         timeSlots: string | null;
@@ -236,6 +254,7 @@ export declare class ServiceService {
         serviceType: string | null;
         categoryId: number | null;
         serviceTypeId: number | null;
+        providerId: number | null;
         durationMinutes: number | null;
         availability: boolean;
         timeSlots: string | null;
@@ -250,11 +269,43 @@ export declare class ServiceService {
         serviceType: string | null;
         categoryId: number | null;
         serviceTypeId: number | null;
+        providerId: number | null;
         durationMinutes: number | null;
         availability: boolean;
         timeSlots: string | null;
         createdAt: Date;
         updatedAt: Date;
     }>;
+    static listByProvider(providerId: number): Promise<{
+        id: number;
+        name: string;
+        description: string | null;
+        price: number;
+        serviceType: string | null;
+        categoryId: number | null;
+        serviceTypeId: number | null;
+        providerId: number | null;
+        durationMinutes: number | null;
+        availability: boolean;
+        timeSlots: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }[]>;
+    static update(id: number, updates: Partial<typeof services.$inferInsert>): Promise<{
+        id: number;
+        name: string;
+        description: string | null;
+        price: number;
+        serviceType: string | null;
+        categoryId: number | null;
+        serviceTypeId: number | null;
+        providerId: number | null;
+        durationMinutes: number | null;
+        availability: boolean;
+        timeSlots: string | null;
+        createdAt: Date;
+        updatedAt: Date;
+    }>;
+    static delete(id: number): Promise<boolean>;
 }
 //# sourceMappingURL=service.service.d.ts.map

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
 import { router, useLocalSearchParams } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
+import { apiService, Service } from '@/src/services/api';
 
 const { width } = Dimensions.get('window');
 
@@ -40,84 +41,23 @@ interface ProviderDetail {
   services: string[];
 }
 
-const providerDetails: { [key: string]: ProviderDetail } = {
-  '1': {
-    id: '1',
-    name: 'Alok Sahu',
-    rating: 4.9,
-    reviewCount: 127,
-    price: 80,
-    experience: '5 years',
-    specialties: ['Deep Cleaning', 'Regular Cleaning', 'Move-in/out'],
-    availability: 'Available Today',
-    isVerified: true,
-    responseTime: '10 mins',
-    about: 'Professional cleaner with 5 years of experience. I take pride in providing thorough and reliable cleaning services. I use eco-friendly products and pay attention to every detail.',
-    completedJobs: 340,
-    repeatCustomers: 85,
-    services: ['Regular House Cleaning', 'Deep Cleaning', 'Move-in/Move-out Cleaning', 'Post-construction Cleanup'],
-    reviews: [
-      {
-        id: '1',
-        userName: 'Rohit',
-        rating: 5,
-        comment: 'Sarah did an amazing job! Very thorough and professional. My house looks spotless.',
-        date: 'Dec 20, 2024',
-        serviceType: 'Deep Cleaning',
-      },
-      {
-        id: '2',
-        userName: 'Lisa M.',
-        rating: 5,
-        comment: 'Excellent service! Sarah is reliable and does high-quality work. Highly recommended.',
-        date: 'Dec 18, 2024',
-        serviceType: 'Regular Cleaning',
-      },
-      {
-        id: '3',
-        userName: 'Hardik Singh',
-        rating: 4,
-        comment: 'Good service overall. Sarah was punctual and did a thorough job cleaning.',
-        date: 'Dec 15, 2024',
-        serviceType: 'Move-out Cleaning',
-      },
-    ],
-  },
-  '4': {
-    id: '4',
-    name: 'Rajesh Kr. Sahu',
-    rating: 4.9,
-    reviewCount: 156,
-    price: 120,
-    experience: '10 years',
-    specialties: ['Drywall', 'Door/Window', 'General Repairs'],
-    availability: 'Available Today',
-    isVerified: true,
-    responseTime: '5 mins',
-    about: 'Experienced handyman specializing in home repairs and maintenance. I have been helping homeowners for over 10 years with various repair projects.',
-    completedJobs: 520,
-    repeatCustomers: 92,
-    services: ['Drywall Repair', 'Door Installation', 'Window Repair', 'General Maintenance'],
-    reviews: [
-      {
-        id: '4',
-        userName: 'Sayantan Bhadra',
-        rating: 5,
-        comment: 'Mike fixed our door perfectly. Very professional and cleaned up after himself.',
-        date: 'Dec 22, 2024',
-        serviceType: 'Door Repair',
-      },
-    ],
-  },
-};
+// Removed hardcoded provider details in favor of dynamic API data.
 
 export default function ProviderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState<'about' | 'reviews' | 'services'>('about');
+  const [service, setService] = useState<Service | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      const res = await apiService.getService(Number(id));
+      if (res.success && res.data) setService(res.data);
+    };
+    load();
+  }, [id]);
   
-  const provider = providerDetails[id as string];
-  
-  if (!provider) {
+  if (!service) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
@@ -128,7 +68,7 @@ export default function ProviderScreen() {
   }
 
   const handleBookNow = () => {
-    router.push(`/booking/${provider.id}`);
+    router.push(`/booking/${service.id}`);
   };
 
   const renderStars = (rating: number) => {
@@ -147,19 +87,19 @@ export default function ProviderScreen() {
       case 'about':
         return (
           <View style={styles.tabContent}>
-            <Text style={styles.aboutText}>{provider.about}</Text>
+            <Text style={styles.aboutText}>{service.about}</Text>
             
             <View style={styles.statsContainer}>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{provider.completedJobs}</Text>
+                <Text style={styles.statNumber}>{service.completedJobs}</Text>
                 <Text style={styles.statLabel}>Jobs Completed</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{provider.repeatCustomers}%</Text>
+                <Text style={styles.statNumber}>{service.repeatCustomers}%</Text>
                 <Text style={styles.statLabel}>Repeat Customers</Text>
               </View>
               <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{provider.experience}</Text>
+                <Text style={styles.statNumber}>{service.experience}</Text>
                 <Text style={styles.statLabel}>Experience</Text>
               </View>
             </View>
@@ -167,7 +107,7 @@ export default function ProviderScreen() {
             <View style={styles.specialtiesSection}>
               <Text style={styles.sectionTitle}>Specialties</Text>
               <View style={styles.specialtiesContainer}>
-                {provider.specialties.map((specialty, index) => (
+                {service.specialties.map((specialty, index) => (
                   <View key={index} style={styles.specialtyTag}>
                     <Text style={styles.specialtyText}>{specialty}</Text>
                   </View>
@@ -181,10 +121,10 @@ export default function ProviderScreen() {
         return (
           <View style={styles.tabContent}>
             <Text style={styles.sectionTitle}>Services Offered</Text>
-            {provider.services.map((service, index) => (
+            {service.timeSlots?.split(',').map((slot, index) => (
               <View key={index} style={styles.serviceItem}>
                 <MaterialIcons name="check-circle" size={20} color="#10b981" />
-                <Text style={styles.serviceText}>{service}</Text>
+                <Text style={styles.serviceText}>{slot.trim()}</Text>
               </View>
             ))}
           </View>
@@ -193,7 +133,7 @@ export default function ProviderScreen() {
       case 'reviews':
         return (
           <View style={styles.tabContent}>
-            {provider.reviews.map((review) => (
+            {service.reviews.map((review) => (
               <View key={review.id} style={styles.reviewCard}>
                 <View style={styles.reviewHeader}>
                   <View style={styles.reviewUser}>
@@ -222,37 +162,37 @@ export default function ProviderScreen() {
         {/* Provider Header */}
         <View style={styles.providerHeader}>
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>{provider.name.split(' ').map(n => n[0]).join('')}</Text>
+            <Text style={styles.avatarText}>{service.name.split(' ').map(n => n[0]).join('')}</Text>
           </View>
           
           <View style={styles.providerInfo}>
             <View style={styles.nameContainer}>
-              <Text style={styles.providerName}>{provider.name}</Text>
-              {provider.isVerified && (
+              <Text style={styles.providerName}>{service.name}</Text>
+              {true && (
                 <MaterialIcons name="verified" size={20} color="#10b981" />
               )}
             </View>
             
             <View style={styles.ratingContainer}>
-              <View style={styles.stars}>{renderStars(provider.rating)}</View>
+              <View style={styles.stars}>{renderStars(5)}</View>
               <Text style={styles.ratingText}>
-                {provider.rating} ({provider.reviewCount} reviews)
+                5.0 (0 reviews)
               </Text>
             </View>
             
             <View style={styles.availability}>
               <MaterialIcons name="schedule" size={16} color="#10b981" />
-              <Text style={styles.availabilityText}>{provider.availability}</Text>
+              <Text style={styles.availabilityText}>{service.availability ? 'Available' : 'Unavailable'}</Text>
             </View>
             
             <View style={styles.responseTime}>
               <MaterialIcons name="chat" size={16} color="#6b7280" />
-              <Text style={styles.responseTimeText}>Responds in {provider.responseTime}</Text>
+              <Text style={styles.responseTimeText}>Fast response</Text>
             </View>
           </View>
           
           <View style={styles.priceContainer}>
-            <Text style={styles.price}>₹{provider.price}</Text>
+            <Text style={styles.price}>₹{service.price}</Text>
             <Text style={styles.priceLabel}>per service</Text>
           </View>
         </View>
@@ -279,7 +219,7 @@ export default function ProviderScreen() {
       {/* Book Now Button */}
       <View style={styles.bookContainer}>
         <TouchableOpacity style={styles.bookButton} onPress={handleBookNow}>
-          <Text style={styles.bookButtonText}>Book Now - ₹{provider.price}</Text>
+          <Text style={styles.bookButtonText}>Book Now - ₹{service.price}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

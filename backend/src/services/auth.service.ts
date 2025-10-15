@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { users, userSessions, type NewUser } from '../../drizzle/schema';
+import { users, userSessions, type NewUser } from '../../build/drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { SupabaseService } from './supabase.service';
 import { JwtService } from './jwt.service';

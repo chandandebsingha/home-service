@@ -22,6 +22,23 @@ export const API_CONFIG = {
       PROVIDERS: '/services/providers',
       BOOKINGS: '/services/bookings',
     },
+    PROVIDER: {
+      SERVICES: {
+        LIST: '/provider/services',
+        CREATE: '/provider/services',
+        UPDATE: (id: number | string) => `/provider/services/${id}`,
+        DELETE: (id: number | string) => `/provider/services/${id}`,
+      },
+      BOOKINGS: {
+        LIST: '/provider/bookings',
+        UPDATE_STATUS: (id: number | string) => `/provider/bookings/${id}/status`,
+      },
+      PROFILE: {
+        GET: '/provider/profile',
+        CREATE: '/provider/profile',
+        UPDATE: '/provider/profile',
+      },
+    },
   },
   
   // Request timeout

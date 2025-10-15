@@ -50,6 +50,38 @@ class BookingService {
         const rows = await db_1.db.select().from(schema.bookings).where((0, drizzle_orm_1.eq)(schema.bookings.userId, userId)).orderBy((0, drizzle_orm_1.desc)(schema.bookings.createdAt));
         return rows;
     }
+    static async listByProvider(providerId) {
+        const rows = await db_1.db
+            .select({
+            id: schema.bookings.id,
+            userId: schema.bookings.userId,
+            serviceId: schema.bookings.serviceId,
+            date: schema.bookings.date,
+            time: schema.bookings.time,
+            address: schema.bookings.address,
+            specialInstructions: schema.bookings.specialInstructions,
+            price: schema.bookings.price,
+            status: schema.bookings.status,
+            createdAt: schema.bookings.createdAt,
+        })
+            .from(schema.bookings)
+            .innerJoin(schema.services, (0, drizzle_orm_1.eq)(schema.bookings.serviceId, schema.services.id))
+            .where((0, drizzle_orm_1.eq)(schema.services.providerId, providerId))
+            .orderBy((0, drizzle_orm_1.desc)(schema.bookings.createdAt));
+        return rows;
+    }
+    static async getById(id) {
+        const rows = await db_1.db.select().from(schema.bookings).where((0, drizzle_orm_1.eq)(schema.bookings.id, id)).limit(1);
+        return rows[0] || null;
+    }
+    static async updateStatus(id, status) {
+        const [updated] = await db_1.db
+            .update(schema.bookings)
+            .set({ status })
+            .where((0, drizzle_orm_1.eq)(schema.bookings.id, id))
+            .returning();
+        return updated;
+    }
 }
 exports.BookingService = BookingService;
 //# sourceMappingURL=booking.service.js.map

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { ServicesController } from '../controllers/services.controller';
 import { authenticateToken, authorizeAdmin } from '../middleware/auth.middleware';
 import { validateRequest, Validators } from '../middleware/validation.middleware';
-import { services, serviceCategories, serviceTypes } from '../../drizzle/schema';
+import { services, serviceCategories, serviceTypes } from '../../build/drizzle/schema';
 import { db } from '../db';
 import { eq, sql } from 'drizzle-orm';
 
@@ -56,6 +56,33 @@ router.post(
   ServicesController.create
 );
 
+// Update service
+router.put(
+  '/:id',
+  authenticateToken,
+  authorizeAdmin,
+  validateRequest([
+    { field: 'name', validator: Validators.isString, message: 'name must be a string' },
+    { field: 'price', validator: Validators.isNumber, message: 'price must be a number' },
+    { field: 'description', validator: Validators.isString, message: 'description must be a string', optional: true },
+    { field: 'serviceType', validator: Validators.isString, message: 'serviceType must be a string', optional: true },
+    { field: 'categoryId', validator: Validators.isNumber, message: 'categoryId must be a number', optional: true },
+    { field: 'serviceTypeId', validator: Validators.isNumber, message: 'serviceTypeId must be a number', optional: true },
+    { field: 'durationMinutes', validator: Validators.isNumber, message: 'durationMinutes must be a number', optional: true },
+    { field: 'availability', validator: Validators.isBoolean, message: 'availability must be a boolean', optional: true },
+    { field: 'timeSlots', validator: Validators.isString, message: 'timeSlots must be a string', optional: true },
+  ]),
+  ServicesController.update
+);
+
+// Delete service
+router.delete(
+  '/:id',
+  authenticateToken,
+  authorizeAdmin,
+  ServicesController.delete
+);
+
 export default router;
 
 // Additional lightweight endpoints for categories and types
@@ -99,6 +126,22 @@ router.post('/meta/categories', authenticateToken, authorizeAdmin, async (req, r
   }
 });
 
+// Update category
+router.put('/meta/categories/:id', authenticateToken, authorizeAdmin, async (req, res): Promise<void> => {
+  try {
+    await ensureMetaTables();
+    const id = Number(req.params.id);
+    const body = req.body || {};
+    if (!body.name) { res.status(400).json({ success: false, error: 'name is required' }); return; }
+    const result: any = await db.execute(sql`update service_categories set name = ${body.name}, description = ${body.description || null}, updated_at = now() where id = ${id} returning id, name, description, created_at as "createdAt", updated_at as "updatedAt"`);
+    const updated = Array.isArray(result) ? result[0] : result?.rows?.[0];
+    if (!updated) { res.status(404).json({ success: false, error: 'Category not found' }); return; }
+    res.json({ success: true, data: updated });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e?.message || 'Failed to update category' });
+  }
+});
+
 router.post('/meta/types', authenticateToken, authorizeAdmin, async (req, res): Promise<void> => {
   try {
     await ensureMetaTables();
@@ -110,5 +153,22 @@ router.post('/meta/types', authenticateToken, authorizeAdmin, async (req, res): 
     res.status(201).json({ success: true, data: created || null });
   } catch (e: any) {
     res.status(500).json({ success: false, error: e?.message || 'Failed to create service type' });
+  }
+});
+
+// Update service type
+router.put('/meta/types/:id', authenticateToken, authorizeAdmin, async (req, res): Promise<void> => {
+  try {
+    await ensureMetaTables();
+    const id = Number(req.params.id);
+    const body = req.body || {};
+    if (!body.name) { res.status(400).json({ success: false, error: 'name is required' }); return; }
+    if (!body.categoryId) { res.status(400).json({ success: false, error: 'categoryId is required' }); return; }
+    const result: any = await db.execute(sql`update service_types set category_id = ${Number(body.categoryId)}, name = ${body.name}, description = ${body.description || null}, updated_at = now() where id = ${id} returning id, category_id as "categoryId", name, description, created_at as "createdAt", updated_at as "updatedAt"`);
+    const updated = Array.isArray(result) ? result[0] : result?.rows?.[0];
+    if (!updated) { res.status(404).json({ success: false, error: 'Service type not found' }); return; }
+    res.json({ success: true, data: updated });
+  } catch (e: any) {
+    res.status(500).json({ success: false, error: e?.message || 'Failed to update service type' });
   }
 });

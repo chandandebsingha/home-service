@@ -52,4 +52,51 @@ export class ServicesController {
       res.status(500).json({ success: false, error: error.message || 'Failed to get service' });
     }
   }
+
+  static async update(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (Number.isNaN(id)) {
+        res.status(400).json({ success: false, error: 'Invalid id' });
+        return;
+      }
+      const body = req.body;
+      const updated = await ServiceService.update(id, {
+        name: body.name,
+        description: body.description,
+        price: body.price,
+        serviceType: body.serviceType,
+        categoryId: body.categoryId,
+        serviceTypeId: body.serviceTypeId,
+        durationMinutes: body.durationMinutes,
+        availability: body.availability,
+        timeSlots: body.timeSlots,
+      });
+      if (!updated) {
+        res.status(404).json({ success: false, error: 'Service not found' });
+        return;
+      }
+      res.status(200).json({ success: true, data: updated });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message || 'Failed to update service' });
+    }
+  }
+
+  static async delete(req: Request, res: Response): Promise<void> {
+    try {
+      const id = parseInt(req.params.id, 10);
+      if (Number.isNaN(id)) {
+        res.status(400).json({ success: false, error: 'Invalid id' });
+        return;
+      }
+      const deleted = await ServiceService.delete(id);
+      if (!deleted) {
+        res.status(404).json({ success: false, error: 'Service not found' });
+        return;
+      }
+      res.status(200).json({ success: true, message: 'Service deleted successfully' });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: error.message || 'Failed to delete service' });
+    }
+  }
 }

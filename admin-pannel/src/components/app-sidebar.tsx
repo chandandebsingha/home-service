@@ -12,6 +12,16 @@ import {
   PieChart,
   Settings2,
   SquareTerminal,
+  Users,
+  Wrench,
+  ShoppingCart,
+  Calendar,
+  Star,
+  BarChart3,
+  Tag,
+  Type,
+  Plus,
+  Search,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -25,138 +35,182 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/contexts/AuthContext"
+import { UserRole } from "@/lib/roles"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
-  navMain: [
-    {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
-      isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
+// Role-based navigation data
+const getRoleBasedData = (userRole: UserRole) => {
+  const baseData = {
+    teams: [
+      {
+        name: "Home Service Platform",
+        logo: GalleryVerticalEnd,
+        plan: "Professional",
+      },
+    ],
+  }
+
+  switch (userRole) {
+    case UserRole.ADMIN:
+      return {
+        ...baseData,
+        navMain: [
+          {
+            title: "Dashboard",
+            url: "/dashboard",
+            icon: BarChart3,
+            isActive: true,
+          },
+          {
+            title: "Management",
+            url: "#",
+            icon: Settings2,
+            items: [
+              {
+                title: "Categories",
+                url: "/admin/categories",
+              },
+              {
+                title: "Service Types",
+                url: "/admin/types",
+              },
+              {
+                title: "All Services",
+                url: "/admin/services",
+              },
+            ],
+          },
+          {
+            title: "Analytics",
+            url: "#",
+            icon: PieChart,
+            items: [
+              {
+                title: "User Analytics",
+                url: "#",
+              },
+              {
+                title: "Service Analytics",
+                url: "#",
+              },
+              {
+                title: "Booking Analytics",
+                url: "#",
+              },
+            ],
+          },
+        ],
+        projects: [
+          {
+            name: "User Management",
+            url: "#",
+            icon: Users,
+          },
+          {
+            name: "Service Approval",
+            url: "#",
+            icon: Wrench,
+          },
+        ],
+      }
+
+    case UserRole.SERVICE_PROVIDER:
+      return {
+        ...baseData,
+        navMain: [
+          {
+            title: "My Services",
+            url: "/provider/services",
+            icon: Wrench,
+            isActive: true,
+          },
+          {
+            title: "My Bookings",
+            url: "/provider/bookings",
+            icon: Calendar,
+          },
+          {
+            title: "Analytics",
+            url: "#",
+            icon: BarChart3,
+            items: [
+              {
+                title: "Service Performance",
+                url: "#",
+              },
+              {
+                title: "Booking History",
+                url: "#",
+              },
+            ],
+          },
+        ],
+        projects: [
+          {
+            name: "Add New Service",
+            url: "/provider/services",
+            icon: Plus,
+          },
+          {
+            name: "View Reviews",
+            url: "#",
+            icon: Star,
+          },
+        ],
+      }
+
+    case UserRole.USER:
+    default:
+      return {
+        ...baseData,
+        navMain: [
+          {
+            title: "Browse Services",
+            url: "/user/services",
+            icon: Search,
+            isActive: true,
+          },
+          {
+            title: "My Bookings",
+            url: "/user/bookings",
+            icon: Calendar,
+          },
+          {
+            title: "Reviews",
+            url: "#",
+            icon: Star,
+            items: [
+              {
+                title: "My Reviews",
+                url: "#",
+              },
+              {
+                title: "Leave Review",
+                url: "#",
+              },
+            ],
+          },
+        ],
+        projects: [
+          {
+            name: "Book a Service",
+            url: "/user/services",
+            icon: ShoppingCart,
+          },
+          {
+            name: "Booking History",
+            url: "/user/bookings",
+            icon: Calendar,
+          },
+        ],
+      }
+  }
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { userRole } = useAuth()
+  const data = getRoleBasedData(userRole)
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -167,7 +221,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavProjects projects={data.projects} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

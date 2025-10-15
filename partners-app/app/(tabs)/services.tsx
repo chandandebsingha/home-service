@@ -11,70 +11,41 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { apiService, Service as ApiServiceType } from '@/src/services/api';
 
-interface Service {
-	id: string;
-	name: string;
-	description: string;
-	price: number;
-	category: string;
-	status: 'active' | 'inactive';
-	createdAt: string;
-}
+type Service = ApiServiceType & { status?: 'active' | 'inactive'; category?: string };
 
 export default function ServicesScreen() {
-	const { user, isAuthenticated } = useAuth();
+	const { user, isAuthenticated, accessToken } = useAuth();
 	const [services, setServices] = useState<Service[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
-
-	// Mock data for demonstration
-	const mockServices: Service[] = [
-		{
-			id: '1',
-			name: 'House Cleaning',
-			description: 'Complete house cleaning service including kitchen, bathroom, and living areas',
-			price: 150,
-			category: 'Cleaning',
-			status: 'active',
-			createdAt: '2024-01-15',
-		},
-		{
-			id: '2',
-			name: 'Plumbing Repair',
-			description: 'Professional plumbing services for leaks, clogs, and installations',
-			price: 200,
-			category: 'Plumbing',
-			status: 'active',
-			createdAt: '2024-01-10',
-		},
-		{
-			id: '3',
-			name: 'Electrical Work',
-			description: 'Electrical repairs, installations, and maintenance services',
-			price: 300,
-			category: 'Electrical',
-			status: 'inactive',
-			createdAt: '2024-01-05',
-		},
-	];
 
 	useEffect(() => {
 		loadServices();
 	}, []);
 
-	const loadServices = async () => {
-		try {
-			setLoading(true);
-			// Simulate API call
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			setServices(mockServices);
-		} catch (error) {
-			Alert.alert('Error', 'Failed to load services');
-		} finally {
-			setLoading(false);
-		}
-	};
+    const loadServices = async () => {
+        try {
+            setLoading(true);
+            if (!isAuthenticated || !accessToken) {
+                setServices([]);
+                return;
+            }
+            const res = await apiService.listMyServices(accessToken);
+            if (res.success && res.data) {
+                setServices(res.data);
+            } else {
+                console.error('Failed to load services:', res.error);
+                Alert.alert('Error', res.error || 'Failed to load services');
+            }
+        } catch (error) {
+            console.error('Error loading services:', error);
+            Alert.alert('Error', 'Failed to load services');
+        } finally {
+            setLoading(false);
+        }
+    };
 
 	const onRefresh = async () => {
 		setRefreshing(true);
@@ -95,7 +66,7 @@ export default function ServicesScreen() {
 		);
 	};
 
-	const deleteService = (serviceId: string) => {
+    const deleteService = (serviceId: number | string) => {
 		Alert.alert(
 			'Delete Service',
 			'Are you sure you want to delete this service?',
@@ -104,9 +75,19 @@ export default function ServicesScreen() {
 				{
 					text: 'Delete',
 					style: 'destructive',
-					onPress: () => {
-						setServices(prev => prev.filter(service => service.id !== serviceId));
-					},
+                    onPress: async () => {
+                        try {
+                            if (!accessToken) return;
+                            const res = await apiService.deleteMyService(accessToken, Number(serviceId));
+                            if (res.success) {
+                                setServices(prev => prev.filter(service => String(service.id) !== String(serviceId)));
+                            } else {
+                                Alert.alert('Error', res.error || 'Failed to delete service');
+                            }
+                        } catch {
+                            Alert.alert('Error', 'Failed to delete service');
+                        }
+                    },
 				},
 			]
 		);
@@ -148,7 +129,7 @@ export default function ServicesScreen() {
 				<View style={styles.actionButtons}>
 					<TouchableOpacity
 						style={styles.editButton}
-						onPress={() => router.push(`/provider/add-service?id=${service.id}`)}
+                    onPress={() => router.push(`/provider/add-service?id=${service.id}`)}
 					>
 						<MaterialIcons name="edit" size={20} color="#6366f1" />
 					</TouchableOpacity>

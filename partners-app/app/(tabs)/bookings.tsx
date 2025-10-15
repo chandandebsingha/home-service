@@ -10,107 +10,41 @@ import {
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useAuth } from '@/src/contexts/AuthContext';
+import { apiService, Booking as ApiBooking } from '@/src/services/api';
 
-interface IncomingBooking {
-	id: string;
-	serviceName: string;
-	customerName: string;
-	customerPhone: string;
-	customerEmail: string;
-	address: string;
-	date: string;
-	time: string;
-	status: 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
-	amount: number;
-	notes?: string;
-	createdAt: string;
-}
-
-type BookingStatus = 'pending' | 'confirmed' | 'in-progress' | 'completed' | 'cancelled';
+type Booking = ApiBooking;
+type BookingStatus = Booking['status'];
 
 export default function PartnerBookingsScreen() {
-	const { user, isAuthenticated } = useAuth();
-	const [activeTab, setActiveTab] = useState<'pending' | 'confirmed' | 'completed'>('pending');
-	const [bookings, setBookings] = useState<IncomingBooking[]>([]);
+    const { isAuthenticated, accessToken } = useAuth();
+    const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming');
+    const [bookings, setBookings] = useState<Booking[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
-
-	// Mock data for demonstration
-	const mockBookings: IncomingBooking[] = [
-		{
-			id: '1',
-			serviceName: 'House Cleaning',
-			customerName: 'John Doe',
-			customerPhone: '+1 234-567-8900',
-			customerEmail: 'john@example.com',
-			address: '123 Main St, City, State',
-			date: '2024-01-25',
-			time: '10:00 AM',
-			status: 'pending',
-			amount: 150,
-			notes: 'Please clean the kitchen thoroughly',
-			createdAt: '2024-01-20T10:30:00Z',
-		},
-		{
-			id: '2',
-			serviceName: 'Plumbing Repair',
-			customerName: 'Jane Smith',
-			customerPhone: '+1 234-567-8901',
-			customerEmail: 'jane@example.com',
-			address: '456 Oak Ave, City, State',
-			date: '2024-01-24',
-			time: '2:00 PM',
-			status: 'confirmed',
-			amount: 200,
-			notes: 'Kitchen sink is leaking',
-			createdAt: '2024-01-19T14:20:00Z',
-		},
-		{
-			id: '3',
-			serviceName: 'Electrical Work',
-			customerName: 'Mike Johnson',
-			customerPhone: '+1 234-567-8902',
-			customerEmail: 'mike@example.com',
-			address: '789 Pine St, City, State',
-			date: '2024-01-23',
-			time: '9:00 AM',
-			status: 'completed',
-			amount: 300,
-			notes: 'Install new light fixtures',
-			createdAt: '2024-01-18T09:15:00Z',
-		},
-		{
-			id: '4',
-			serviceName: 'Painting Service',
-			customerName: 'Sarah Wilson',
-			customerPhone: '+1 234-567-8903',
-			customerEmail: 'sarah@example.com',
-			address: '321 Elm St, City, State',
-			date: '2024-01-26',
-			time: '11:00 AM',
-			status: 'pending',
-			amount: 400,
-			notes: 'Paint living room and bedroom',
-			createdAt: '2024-01-21T16:45:00Z',
-		},
-	];
 
 	useEffect(() => {
 		loadBookings();
 	}, []);
 
-	const loadBookings = async () => {
-		try {
-			setLoading(true);
-			// Simulate API call
-			await new Promise(resolve => setTimeout(resolve, 1000));
-			setBookings(mockBookings);
-		} catch (error) {
-			Alert.alert('Error', 'Failed to load bookings');
-		} finally {
-			setLoading(false);
-		}
-	};
+    const loadBookings = async () => {
+        try {
+            setLoading(true);
+            if (!isAuthenticated || !accessToken) {
+                setBookings([]);
+                return;
+            }
+            const res = await apiService.listMyBookings(accessToken);
+            if (res.success && res.data) {
+                setBookings(res.data);
+            } else {
+                Alert.alert('Error', res.error || 'Failed to load bookings');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to load bookings');
+        } finally {
+            setLoading(false);
+        }
+    };
 
 	const onRefresh = async () => {
 		setRefreshing(true);
@@ -118,75 +52,58 @@ export default function PartnerBookingsScreen() {
 		setRefreshing(false);
 	};
 
-	const handleBookingAction = (bookingId: string, action: 'accept' | 'reject' | 'start' | 'complete') => {
-		const actionText = action === 'accept' ? 'accept' : action === 'reject' ? 'reject' : action === 'start' ? 'start' : 'complete';
-		
-		Alert.alert(
-			'Confirm Action',
-			`Are you sure you want to ${actionText} this booking?`,
-			[
-				{ text: 'Cancel', style: 'cancel' },
-				{
-					text: actionText.charAt(0).toUpperCase() + actionText.slice(1),
-					onPress: () => {
-						setBookings(prev =>
-							prev.map(booking =>
-								booking.id === bookingId
-									? {
-											...booking,
-											status: action === 'accept' ? 'confirmed' : 
-													action === 'reject' ? 'cancelled' :
-													action === 'start' ? 'in-progress' : 'completed',
-									  }
-									: booking
-							)
-						);
-					},
-				},
-			]
-		);
-	};
+    const handleUpdateStatus = (bookingId: number, status: BookingStatus) => {
+        const label = status === 'completed' ? 'complete' : 'cancel';
+        Alert.alert(
+            'Confirm Action',
+            `Are you sure you want to ${label} this booking?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: label.charAt(0).toUpperCase() + label.slice(1),
+                    onPress: async () => {
+                        try {
+                            if (!accessToken) return;
+                            const res = await apiService.updateBookingStatus(accessToken, bookingId, status);
+                            if (res.success && res.data) {
+                                setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: res.data!.status } : b));
+                            } else {
+                                Alert.alert('Error', res.error || 'Failed to update booking');
+                            }
+                        } catch {
+                            Alert.alert('Error', 'Failed to update booking');
+                        }
+                    },
+                },
+            ]
+        );
+    };
 
-	const filteredBookings = bookings.filter((booking) => {
-		switch (activeTab) {
-			case 'pending':
-				return booking.status === 'pending';
-			case 'confirmed':
-				return booking.status === 'confirmed' || booking.status === 'in-progress';
-			case 'completed':
-				return booking.status === 'completed' || booking.status === 'cancelled';
-			default:
-				return true;
-		}
-	});
+    const filteredBookings = bookings.filter((booking) => booking.status === activeTab);
 
-	const getStatusColor = (status: BookingStatus) => {
-		switch (status) {
-			case 'pending':
-				return '#f59e0b';
-			case 'confirmed':
-				return '#3b82f6';
-			case 'in-progress':
-				return '#8b5cf6';
-			case 'completed':
-				return '#10b981';
-			case 'cancelled':
-				return '#ef4444';
-			default:
-				return '#6b7280';
-		}
-	};
+    const getStatusColor = (status: BookingStatus) => {
+        switch (status) {
+            case 'upcoming':
+                return '#3b82f6';
+            case 'completed':
+                return '#10b981';
+            case 'cancelled':
+                return '#ef4444';
+            default:
+                return '#6b7280';
+        }
+    };
 
-	const renderBookingCard = (booking: IncomingBooking) => (
+    const renderBookingCard = (booking: Booking) => (
 		<View key={booking.id} style={styles.bookingCard}>
 			<View style={styles.bookingHeader}>
 				<View style={styles.bookingInfo}>
-					<Text style={styles.serviceName}>{booking.serviceName}</Text>
-					<Text style={styles.customerName}>{booking.customerName}</Text>
+                    <Text style={styles.serviceName}>Booking #{booking.id}</Text>
+                    <Text style={styles.customerName}>Service ID: {booking.serviceId}</Text>
 				</View>
 				<View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(booking.status)}15` }]}>
 					<Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
-						{booking.status.replace('-', ' ')}
+                        {booking.status}
 					</Text>
 				</View>
 			</View>
@@ -201,63 +118,30 @@ export default function PartnerBookingsScreen() {
 					<Text style={styles.detailText}>{booking.date} at {booking.time}</Text>
 				</View>
 				<View style={styles.detailRow}>
-					<MaterialIcons name="phone" size={16} color="#6b7280" />
-					<Text style={styles.detailText}>{booking.customerPhone}</Text>
-				</View>
-				<View style={styles.detailRow}>
 					<MaterialIcons name="attach-money" size={16} color="#6b7280" />
-					<Text style={styles.detailText}>${booking.amount}</Text>
+                    <Text style={styles.detailText}>${booking.price}</Text>
 				</View>
-				{booking.notes && (
-					<View style={styles.detailRow}>
-						<MaterialIcons name="note" size={16} color="#6b7280" />
-						<Text style={styles.detailText}>{booking.notes}</Text>
-					</View>
-				)}
 			</View>
 
-			{booking.status === 'pending' && (
+            {booking.status === 'upcoming' && (
 				<View style={styles.bookingActions}>
 					<TouchableOpacity
-						style={[styles.actionButton, styles.acceptButton]}
-						onPress={() => handleBookingAction(booking.id, 'accept')}
+                        style={[styles.actionButton, styles.completeButton]}
+                        onPress={() => handleUpdateStatus(booking.id, 'completed')}
 					>
-						<MaterialIcons name="check" size={16} color="#fff" />
-						<Text style={styles.actionButtonText}>Accept</Text>
+                        <MaterialIcons name="done" size={16} color="#fff" />
+                        <Text style={styles.actionButtonText}>Mark Complete</Text>
 					</TouchableOpacity>
 					<TouchableOpacity
-						style={[styles.actionButton, styles.rejectButton]}
-						onPress={() => handleBookingAction(booking.id, 'reject')}
+                        style={[styles.actionButton, styles.rejectButton]}
+                        onPress={() => handleUpdateStatus(booking.id, 'cancelled')}
 					>
 						<MaterialIcons name="close" size={16} color="#fff" />
-						<Text style={styles.actionButtonText}>Reject</Text>
+                        <Text style={styles.actionButtonText}>Cancel</Text>
 					</TouchableOpacity>
 				</View>
 			)}
 
-			{booking.status === 'confirmed' && (
-				<View style={styles.bookingActions}>
-					<TouchableOpacity
-						style={[styles.actionButton, styles.startButton]}
-						onPress={() => handleBookingAction(booking.id, 'start')}
-					>
-						<MaterialIcons name="play-arrow" size={16} color="#fff" />
-						<Text style={styles.actionButtonText}>Start Work</Text>
-					</TouchableOpacity>
-				</View>
-			)}
-
-			{booking.status === 'in-progress' && (
-				<View style={styles.bookingActions}>
-					<TouchableOpacity
-						style={[styles.actionButton, styles.completeButton]}
-						onPress={() => handleBookingAction(booking.id, 'complete')}
-					>
-						<MaterialIcons name="done" size={16} color="#fff" />
-						<Text style={styles.actionButtonText}>Mark Complete</Text>
-					</TouchableOpacity>
-				</View>
-			)}
 		</View>
 	);
 
@@ -278,29 +162,29 @@ export default function PartnerBookingsScreen() {
 
 	return (
 		<View style={styles.container}>
-			<View style={styles.tabContainer}>
+            <View style={styles.tabContainer}>
 				<TouchableOpacity
-					style={[styles.tab, activeTab === 'pending' && styles.activeTab]}
-					onPress={() => setActiveTab('pending')}
+                    style={[styles.tab, activeTab === 'upcoming' && styles.activeTab]}
+                    onPress={() => setActiveTab('upcoming')}
 				>
-					<Text style={[styles.tabText, activeTab === 'pending' && styles.activeTabText]}>
-						Pending
+                    <Text style={[styles.tabText, activeTab === 'upcoming' && styles.activeTabText]}>
+                        Upcoming
 					</Text>
 				</TouchableOpacity>
 				<TouchableOpacity
-					style={[styles.tab, activeTab === 'confirmed' && styles.activeTab]}
-					onPress={() => setActiveTab('confirmed')}
+                    style={[styles.tab, activeTab === 'completed' && styles.activeTab]}
+                    onPress={() => setActiveTab('completed')}
 				>
-					<Text style={[styles.tabText, activeTab === 'confirmed' && styles.activeTabText]}>
-						Active
+                    <Text style={[styles.tabText, activeTab === 'completed' && styles.activeTabText]}>
+                        Completed
 					</Text>
 				</TouchableOpacity>
 				<TouchableOpacity
-					style={[styles.tab, activeTab === 'completed' && styles.activeTab]}
-					onPress={() => setActiveTab('completed')}
+                    style={[styles.tab, activeTab === 'cancelled' && styles.activeTab]}
+                    onPress={() => setActiveTab('cancelled')}
 				>
-					<Text style={[styles.tabText, activeTab === 'completed' && styles.activeTabText]}>
-						Completed
+                    <Text style={[styles.tabText, activeTab === 'cancelled' && styles.activeTabText]}>
+                        Cancelled
 					</Text>
 				</TouchableOpacity>
 			</View>

@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { services, serviceCategories, serviceTypes, bookings } from '../../drizzle/schema';
+import { services, serviceCategories, serviceTypes, bookings } from '../../build/drizzle/schema';
 import { and, eq } from 'drizzle-orm';
 
 export class ServiceService {
@@ -32,5 +32,23 @@ export class ServiceService {
     const servicesTable = this.ensureTable();
     const rows = await db.select().from(servicesTable).where(eq(servicesTable.id, id)).limit(1);
     return rows[0] || null;
+  }
+
+  static async listByProvider(providerId: number) {
+    const servicesTable = this.ensureTable();
+    const rows = await db.select().from(servicesTable).where(eq(servicesTable.providerId, providerId));
+    return rows;
+  }
+
+  static async update(id: number, updates: Partial<typeof services.$inferInsert>) {
+    const servicesTable = this.ensureTable();
+    const [updated] = await db.update(servicesTable).set(updates).where(eq(servicesTable.id, id)).returning();
+    return updated;
+  }
+
+  static async delete(id: number) {
+    const servicesTable = this.ensureTable();
+    await db.delete(servicesTable).where(eq(servicesTable.id, id));
+    return true;
   }
 }

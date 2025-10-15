@@ -1,12 +1,5 @@
-import React from "react";
-import Page from "./dashboard/page";
+import { redirect } from "next/navigation"
 
-const Home = () => {
-	return (
-		<>
-			<Page />
-		</>
-	);
-};
-
-export default Home;
+export default function Home() {
+  redirect("/auth/login")
+}

@@ -109,18 +109,43 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      const data = await response.json();
+      const contentType = response.headers.get('content-type') || '';
+      const rawText = await response.text();
+      let parsed: any = null;
+      if (contentType.includes('application/json') || rawText.trim().startsWith('{') || rawText.trim().startsWith('[')) {
+        try {
+          parsed = JSON.parse(rawText);
+        } catch (err) {
+          return {
+            success: false,
+            error: `Invalid JSON response (HTTP ${response.status}) for ${url}.`,
+          };
+        }
+      } else {
+        if (!response.ok) {
+          const snippet = rawText?.slice(0, 120) || '';
+          return {
+            success: false,
+            error: `HTTP ${response.status} ${response.statusText} at ${url}${snippet ? ` - ${snippet}` : ''}`,
+          };
+        }
+        // Unexpected non-JSON success; surface minimal info
+        return {
+          success: false,
+          error: `Unexpected non-JSON response from server at ${url}.`,
+        };
+      }
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || `HTTP ${response.status}: ${response.statusText}`,
+          error: parsed?.message || `HTTP ${response.status}: ${response.statusText} at ${url}`,
         };
       }
 
       return {
         success: true,
-        data,
+        data: parsed,
       };
     } catch (error) {
       return {
@@ -199,13 +224,39 @@ class ApiService {
   }
 
   async createService(token: string, payload: CreateServiceRequest): Promise<ApiResponse<Service>> {
-    const res = await this.request<any>(API_CONFIG.ENDPOINTS.SERVICES.CREATE, {
+    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.CREATE, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
     });
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Service };
+  }
+
+  async listMyServices(token: string): Promise<ApiResponse<Service[]>> {
+    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.LIST, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Service[] };
+  }
+
+  async updateMyService(token: string, id: number, payload: Partial<CreateServiceRequest>): Promise<ApiResponse<Service>> {
+    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.UPDATE(id), {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload),
+    });
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Service };
+  }
+
+  async deleteMyService(token: string, id: number): Promise<ApiResponse> {
+    return this.request(API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.DELETE(id), {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
   }
 
   // Bookings
@@ -220,12 +271,22 @@ class ApiService {
   }
 
   async listMyBookings(token: string): Promise<ApiResponse<Booking[]>> {
-    const res = await this.request<any>('/bookings/me', {
+    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.BOOKINGS.LIST, {
       method: 'GET',
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Booking[] };
+  }
+
+  async updateBookingStatus(token: string, id: number, status: string): Promise<ApiResponse<Booking>> {
+    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.BOOKINGS.UPDATE_STATUS(id), {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ status }),
+    });
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Booking };
   }
 
   // Health check

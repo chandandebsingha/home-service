@@ -59,9 +59,38 @@ export const services = pgTable('services', {
   // new relational fields
   categoryId: integer('category_id').references(() => serviceCategories.id),
   serviceTypeId: integer('service_type_id').references(() => serviceTypes.id),
+  providerId: integer('provider_id').references(() => users.id), // Service provider who created this service
   durationMinutes: integer('duration_minutes'),
   availability: boolean('availability').default(true).notNull(),
   timeSlots: text('time_slots'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Occupations table (managed by admin only)
+export const occupations = pgTable('occupations', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  isActive: boolean('is_active').default(true).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+// Provider profiles table
+export const providerProfiles = pgTable('provider_profiles', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull().unique(),
+  occupationId: integer('occupation_id').references(() => occupations.id),
+  businessName: text('business_name'),
+  businessAddress: text('business_address'),
+  phoneNumber: text('phone_number'),
+  experience: text('experience'), // years of experience
+  skills: text('skills'), // JSON array of skills
+  certifications: text('certifications'), // JSON array of certifications
+  bio: text('bio'),
+  isVerified: boolean('is_verified').default(false).notNull(),
+  isActive: boolean('is_active').default(true).notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -92,3 +121,7 @@ export type ServiceCategory = typeof serviceCategories.$inferSelect;
 export type NewServiceCategory = typeof serviceCategories.$inferInsert;
 export type ServiceType = typeof serviceTypes.$inferSelect;
 export type NewServiceType = typeof serviceTypes.$inferInsert;
+export type Occupation = typeof occupations.$inferSelect;
+export type NewOccupation = typeof occupations.$inferInsert;
+export type ProviderProfile = typeof providerProfiles.$inferSelect;
+export type NewProviderProfile = typeof providerProfiles.$inferInsert;

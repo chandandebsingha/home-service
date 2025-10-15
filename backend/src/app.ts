@@ -6,6 +6,8 @@ import { errorHandler, jsonErrorHandler } from './middleware/error.middleware';
 import servicesRoutes from './routes/services.routes';
 import bookingsRoutes from './routes/bookings.routes';
 import adminRoutes from './routes/admin.routes';
+import providerRoutes from './routes/provider.routes';
+import occupationRoutes from './routes/occupation.routes';
 
 const app = express();
 
@@ -39,6 +41,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/services', servicesRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/provider', providerRoutes);
+app.use('/api/occupations', occupationRoutes);
 
 // Health check
 app.get('/', (req, res) => {

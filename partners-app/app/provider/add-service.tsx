@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
 	View,
 	Text,
@@ -10,17 +10,73 @@ import {
 } from "react-native";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { apiService, CreateServiceRequest } from "../../src/services/api";
-import { router } from "expo-router";
+import { getApiUrl } from "../../src/config/environment";
+import { router, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+interface ServiceType {
+	id: number;
+	name: string;
+	description: string;
+	categoryId: number;
+	createdAt: string;
+	updatedAt: string;
+}
+
 export default function AddServiceScreen() {
-	const { user, isAuthenticated } = useAuth();
-	const [form, setForm] = useState<CreateServiceRequest>({
+    const { isAuthenticated, accessToken } = useAuth();
+    const { id } = useLocalSearchParams<{ id?: string }>();
+	const [form, setForm] = useState<CreateServiceRequest & { serviceTypeId?: number }>({
 		name: "",
 		price: 0,
 		availability: true,
 	});
+	const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
 	const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                setLoading(true);
+                
+                // Load service types
+                if (accessToken) {
+                    const serviceTypesRes = await fetch(getApiUrl('/services/meta/types'), {
+                        headers: {
+                            'Authorization': `Bearer ${accessToken}`,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    const serviceTypesData = await serviceTypesRes.json();
+                    if (serviceTypesData.success) {
+                        setServiceTypes(serviceTypesData.data || []);
+                    }
+                }
+
+                // Load service data if editing
+                if (id) {
+                    const res = await apiService.getService(Number(id));
+                    if (res.success && res.data) {
+                        setForm({
+                            name: res.data.name || "",
+                            description: res.data.description,
+                            price: res.data.price,
+                            serviceType: res.data.serviceType,
+                            serviceTypeId: res.data.serviceTypeId,
+                            durationMinutes: res.data.durationMinutes,
+                            availability: res.data.availability,
+                            timeSlots: res.data.timeSlots,
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
+    }, [id, accessToken]);
 
 	if (!isAuthenticated) {
 		return (
@@ -38,29 +94,39 @@ export default function AddServiceScreen() {
 		return Number.isFinite(n) ? n : 0;
 	};
 
-	const submit = async () => {
+    const submit = async () => {
 		try {
 			setLoading(true);
 			const token = await AsyncStorage.getItem("access_token");
 			if (!token) throw new Error("Missing access token");
 
-			const res = await apiService.createService(token, {
-				name: form.name.trim(),
-				description: form.description?.trim() || undefined,
-				price: Number(form.price), // keep as number
-				serviceType: form.serviceType?.trim() || undefined,
-				durationMinutes: form.durationMinutes
-					? Number(form.durationMinutes)
-					: undefined,
-				availability: form.availability,
-				timeSlots: form.timeSlots?.trim() || undefined,
-			});
+            if (!form.serviceTypeId) {
+                Alert.alert("Error", "Please select a service type");
+                return;
+            }
 
-			if (!res.success) throw new Error(res.error || "Failed to create");
-			Alert.alert("Success", "Service created");
+            const payload: CreateServiceRequest = {
+                name: form.name.trim(),
+                description: form.description?.trim() || undefined,
+                price: Number(form.price),
+                serviceType: form.serviceType?.trim() || undefined,
+                serviceTypeId: form.serviceTypeId,
+                durationMinutes: form.durationMinutes
+                    ? Number(form.durationMinutes)
+                    : undefined,
+                availability: form.availability,
+                timeSlots: form.timeSlots?.trim() || undefined,
+            };
+
+            const res = id
+                ? await apiService.updateMyService(token, Number(id), payload)
+                : await apiService.createService(token, payload);
+
+            if (!res.success) throw new Error(res.error || (id ? "Failed to update" : "Failed to create"));
+            Alert.alert("Success", id ? "Service updated" : "Service created");
 			router.back();
-		} catch (e: any) {
-			Alert.alert("Error", e.message || "Failed to create service");
+        } catch (e: any) {
+            Alert.alert("Error", e.message || (id ? "Failed to update service" : "Failed to create service"));
 		} finally {
 			setLoading(false);
 		}
@@ -69,10 +135,11 @@ export default function AddServiceScreen() {
 	const nameOk = form.name.trim().length > 0;
 	const priceOk =
 		Number.isFinite(Number(form.price)) && Number(form.price) >= 0;
+	const serviceTypeOk = !!form.serviceTypeId;
 
 	return (
 		<ScrollView contentContainerStyle={styles.container}>
-			<Text style={styles.title}>Add Service</Text>
+            <Text style={styles.title}>{id ? 'Edit Service' : 'Add Service'}</Text>
 
 			<Text style={styles.label}>Name</Text>
 			<TextInput
@@ -100,13 +167,26 @@ export default function AddServiceScreen() {
 				placeholder="Details"
 			/>
 
-			<Text style={styles.label}>Service Type</Text>
-			<TextInput
-				value={form.serviceType || ""}
-				onChangeText={(t) => update("serviceType", t)}
-				style={styles.input}
-				placeholder="e.g., repair"
-			/>
+			<Text style={styles.label}>Service Type *</Text>
+			<View style={styles.dropdownContainer}>
+				{serviceTypes.map((serviceType) => (
+					<TouchableOpacity
+						key={serviceType.id}
+						style={[
+							styles.dropdownItem,
+							form.serviceTypeId === serviceType.id && styles.dropdownItemSelected
+						]}
+						onPress={() => update("serviceTypeId", serviceType.id)}
+					>
+						<Text style={[
+							styles.dropdownItemText,
+							form.serviceTypeId === serviceType.id && styles.dropdownItemTextSelected
+						]}>
+							{serviceType.name}
+						</Text>
+					</TouchableOpacity>
+				))}
+			</View>
 
 			<Text style={styles.label}>Duration (minutes)</Text>
 			<TextInput
@@ -128,11 +208,9 @@ export default function AddServiceScreen() {
 			<TouchableOpacity
 				style={styles.button}
 				onPress={submit}
-				disabled={loading || !nameOk || !priceOk}
+				disabled={loading || !nameOk || !priceOk || !serviceTypeOk}
 			>
-				<Text style={styles.buttonText}>
-					{loading ? "Saving..." : "Save Service"}
-				</Text>
+                <Text style={styles.buttonText}>{loading ? "Saving..." : (id ? 'Update Service' : 'Save Service')}</Text>
 			</TouchableOpacity>
 		</ScrollView>
 	);
@@ -160,4 +238,30 @@ const styles = StyleSheet.create({
 		opacity: 1,
 	},
 	buttonText: { color: "#fff", fontWeight: "700" },
+	dropdownContainer: {
+		backgroundColor: "#fff",
+		borderRadius: 8,
+		borderWidth: 1,
+		borderColor: "#e5e7eb",
+		maxHeight: 200,
+	},
+	dropdownItem: {
+		paddingHorizontal: 12,
+		paddingVertical: 12,
+		borderBottomWidth: 1,
+		borderBottomColor: "#f3f4f6",
+	},
+	dropdownItemSelected: {
+		backgroundColor: "#f0f9ff",
+		borderLeftWidth: 3,
+		borderLeftColor: "#3b82f6",
+	},
+	dropdownItemText: {
+		fontSize: 16,
+		color: "#374151",
+	},
+	dropdownItemTextSelected: {
+		color: "#1e40af",
+		fontWeight: "600",
+	},
 });
