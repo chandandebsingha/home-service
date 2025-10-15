@@ -1,0 +1,6 @@
+{
+  "/admin/categories/page": "app/admin/categories/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/admin/types/page": "app/admin/types/page.js",
+  "/admin/services/page": "app/admin/services/page.js"
+}
