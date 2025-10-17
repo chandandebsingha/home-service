@@ -17,6 +17,16 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
+import apiService, { Category } from "../../src/services/api";
+
+// UI-friendly category shape used in this component
+type UICategory = {
+	id: string;
+	title: string;
+	description?: string;
+	icon: string;
+	color: string;
+};
 
 type SliderImage = { id: string; uri: string };
 type Props = {
@@ -112,50 +122,52 @@ export default function HomeScreen({
 		</TouchableOpacity>
 	);
 
-	const serviceCategories = [
-		{
-			id: "cleaning",
-			title: "Cleaning",
-			icon: "cleaning-services",
-			color: "#10b981",
-			description: "House cleaning, deep cleaning",
-		},
-		{
-			id: "repairs",
-			title: "Repairs",
-			icon: "build",
-			color: "#f59e0b",
-			description: "Home repairs, maintenance",
-		},
-		{
-			id: "plumbing",
-			title: "Plumbing",
-			icon: "plumbing",
-			color: "#3b82f6",
-			description: "Pipe repairs, installations",
-		},
-		{
-			id: "electrical",
-			title: "Electrical",
-			icon: "electrical-services",
-			color: "#ef4444",
-			description: "Wiring, appliance repair",
-		},
-		{
-			id: "painting",
-			title: "Painting",
-			icon: "format-paint",
-			color: "#8b5cf6",
-			description: "Wall painting, touch-ups",
-		},
-		{
-			id: "carpentry",
-			title: "Carpentry",
-			icon: "carpenter",
-			color: "#f97316",
-			description: "Furniture, wood work",
-		},
-	];
+	const [serviceCategories, setServiceCategories] = React.useState<
+		UICategory[]
+	>([
+		// fallback sample in case API is unreachable
+	]);
+	const [categoriesLoading, setCategoriesLoading] = React.useState(false);
+	const [categoriesError, setCategoriesError] = React.useState<string | null>(
+		null
+	);
+
+	React.useEffect(() => {
+		let mounted = true;
+		setCategoriesLoading(true);
+		apiService
+			.listCategories()
+			.then((res) => {
+				if (!mounted) return;
+				if (res.success && Array.isArray(res.data)) {
+					// Map backend category shape to UI-friendly fields
+					const mapped = res.data.map(
+						(c: Category) =>
+							({
+								id: String(c.id),
+								title: c.name || "",
+								description: c.description || "",
+								icon: (c.icon as string) || "cleaning-services",
+								color: (c.color as string) || "#3b82f6",
+							} as UICategory)
+					);
+					setServiceCategories(mapped);
+				} else {
+					setCategoriesError(res.error || "Failed to load categories");
+				}
+			})
+			.catch((e) => {
+				if (!mounted) return;
+				setCategoriesError(e?.message || "Failed to load categories");
+			})
+			.finally(() => {
+				if (!mounted) return;
+				setCategoriesLoading(false);
+			});
+		return () => {
+			mounted = false;
+		};
+	}, []);
 
 	const handleCategoryPress = (categoryId: string) => {
 		if (!isAuthenticated) {
@@ -208,19 +220,33 @@ export default function HomeScreen({
 								What service do you need today?
 							</Text>
 						</View>
-						{user?.role === 'admin' && (
-							<View style={{ flexDirection: 'row', gap: 8 }}>
+						{user?.role === "admin" && (
+							<View style={{ flexDirection: "row", gap: 8 }}>
 								<TouchableOpacity
-									onPress={() => router.push('/provider/add-service')}
-									style={{ paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#22c55e', borderRadius: 8 }}
+									onPress={() => router.push("/provider/add-service")}
+									style={{
+										paddingHorizontal: 12,
+										paddingVertical: 8,
+										backgroundColor: "#22c55e",
+										borderRadius: 8,
+									}}
 								>
-									<Text style={{ color: '#fff', fontWeight: '700' }}>Add Service</Text>
+									<Text style={{ color: "#fff", fontWeight: "700" }}>
+										Add Service
+									</Text>
 								</TouchableOpacity>
 								<TouchableOpacity
-									onPress={() => router.push('/admin/dashboard')}
-									style={{ paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#0ea5e9', borderRadius: 8 }}
+									onPress={() => router.push("/admin/dashboard")}
+									style={{
+										paddingHorizontal: 12,
+										paddingVertical: 8,
+										backgroundColor: "#0ea5e9",
+										borderRadius: 8,
+									}}
 								>
-									<Text style={{ color: '#fff', fontWeight: '700' }}>Dashboard</Text>
+									<Text style={{ color: "#fff", fontWeight: "700" }}>
+										Dashboard
+									</Text>
 								</TouchableOpacity>
 							</View>
 						)}

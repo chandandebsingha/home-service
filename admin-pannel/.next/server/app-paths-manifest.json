@@ -1,6 +1,8 @@
 {
-  "/admin/categories/page": "app/admin/categories/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/auth/login/page": "app/auth/login/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/admin/types/page": "app/admin/types/page.js",
-  "/admin/services/page": "app/admin/services/page.js"
+  "/admin/categories/page": "app/admin/categories/page.js",
+  "/user/page": "app/user/page.js",
+  "/page": "app/page.js"
 }

@@ -1,4 +1,4 @@
-// File: C:\Users\pabit\Downloads\home-service\home-service\admin-pannel\src\app\admin\categories\page.tsx
+// File: D:\MI\home-service\home-service\admin-pannel\src\app\admin\categories\page.tsx
 import * as entry from '../../../../../src/app/admin/categories/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

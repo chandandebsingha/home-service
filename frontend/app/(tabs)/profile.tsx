@@ -20,6 +20,12 @@ const profileOptions = [
     color: '#3b82f6',
   },
   {
+    id:'services',
+    title: 'View All Services',
+    icon: 'build',
+    color: '#f97316',
+  },
+  {
     id: 'payments',
     title: 'Payment Methods',
     icon: 'payment',
