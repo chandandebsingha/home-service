@@ -92,6 +92,7 @@ export interface Category {
 	// optional UI metadata
 	icon?: string | null;
 	color?: string | null;
+	emoji?: string | null;
 }
 
 export interface ServiceType {
@@ -229,7 +230,8 @@ class ApiService {
 
 	// Categories
 	async listCategories(): Promise<ApiResponse<Category[]>> {
-		const res = await this.request<any>("/categories", {
+		// use the services meta endpoint which includes emoji metadata
+		const res = await this.request<any>("/services/meta/categories", {
 			method: "GET",
 		});
 		if (!res.success) return res;

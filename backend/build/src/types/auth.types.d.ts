@@ -6,6 +6,7 @@ export interface RegisterRequest {
     email: string;
     password: string;
     fullName: string;
+    role?: 'user' | 'admin' | 'partner';
 }
 export interface AuthResponse {
     success: boolean;

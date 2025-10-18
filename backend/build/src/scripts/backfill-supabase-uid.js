@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 require("dotenv/config");
 const db_1 = require("../db");
-const schema_1 = require("../../drizzle/schema");
+const schema_1 = require("../../build/drizzle/schema");
 const drizzle_orm_1 = require("drizzle-orm");
 async function main() {
     const rows = await db_1.db.query.users.findMany({ where: (0, drizzle_orm_1.isNull)(schema_1.users.supabaseUid) });

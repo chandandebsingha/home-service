@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const db_1 = require("../db");
-const schema_1 = require("../../drizzle/schema");
+const schema_1 = require("../../build/drizzle/schema");
 const drizzle_orm_1 = require("drizzle-orm");
 const supabase_service_1 = require("./supabase.service");
 const jwt_service_1 = require("./jwt.service");
@@ -31,6 +31,7 @@ class AuthService {
                 passwordHash: passwordHash,
                 fullName: userData.fullName,
                 supabaseUid: supabaseUid,
+                role: userData.role ?? 'user',
                 isEmailVerified: true,
             };
             const [user] = await db_1.db.insert(schema_1.users).values(newUser).returning();

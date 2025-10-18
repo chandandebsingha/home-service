@@ -68,12 +68,12 @@ export default function CategoryScreen() {
 				style={styles.scrollView}
 				showsVerticalScrollIndicator={false}
 			>
-				<View style={styles.header}>
+				{/* <View style={styles.header}>
 					<Text style={styles.title}>Services</Text>
 					<Text style={styles.subtitle}>
 						{loading ? "Loading…" : `${services.length} services available`}
 					</Text>
-				</View>
+				</View> */}
 
 				{/* Service Types */}
 				{types.length > 0 && (
@@ -110,7 +110,7 @@ export default function CategoryScreen() {
 					</View>
 				)}
 
-				<View style={styles.list}>
+				{/* <View style={styles.list}>
 					{services.map((s) => (
 						<TouchableOpacity
 							key={s.id}
@@ -171,7 +171,7 @@ export default function CategoryScreen() {
 							<Text style={styles.dim}>No services in this category yet.</Text>
 						</View>
 					)}
-				</View>
+				</View> */}
 			</ScrollView>
 		</SafeAreaView>
 	);

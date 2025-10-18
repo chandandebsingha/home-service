@@ -1,4 +1,4 @@
-import { providerProfiles } from '../../drizzle/schema';
+import { providerProfiles } from '../../build/drizzle/schema';
 export declare class ProviderProfileService {
     static create(newProfile: typeof providerProfiles.$inferInsert): Promise<{
         id: number;

@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ProviderProfileService = void 0;
 const db_1 = require("../db");
-const schema_1 = require("../../drizzle/schema");
+const schema_1 = require("../../build/drizzle/schema");
 const drizzle_orm_1 = require("drizzle-orm");
 class ProviderProfileService {
     static async create(newProfile) {

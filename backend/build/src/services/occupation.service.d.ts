@@ -1,10 +1,10 @@
-import { occupations } from '../../drizzle/schema';
+import { occupations } from '../../build/drizzle/schema';
 export declare class OccupationService {
     private static ensureTable;
     static create(newOccupation: typeof occupations.$inferInsert): Promise<{
         id: number;
-        name: string;
         createdAt: Date;
+        name: string;
         description: string | null;
         updatedAt: Date;
         isActive: boolean;

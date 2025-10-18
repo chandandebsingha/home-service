@@ -2,11 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const auth_service_1 = require("../../services/auth.service");
+const portalRoles_1 = require("../../utils/portalRoles");
 class AuthController {
     static async register(req, res) {
         try {
-            const { email, password, fullName } = req.body;
-            const result = await auth_service_1.AuthService.register({ email, password, fullName });
+            const { email, password, fullName, role } = req.body;
+            const portalHeader = req.headers['x-portal'];
+            const requestedRole = role || 'user';
+            if (!(0, portalRoles_1.isRoleAllowedForPortal)(portalHeader, requestedRole)) {
+                return res.status(403).json({ success: false, message: 'Role not allowed for this portal' });
+            }
+            const result = await auth_service_1.AuthService.register({ email, password, fullName, role: requestedRole });
             const userProfile = {
                 id: result.user.id,
                 email: result.user.email,
@@ -40,7 +46,12 @@ class AuthController {
     static async login(req, res) {
         try {
             const { email, password } = req.body;
+            const portalHeader = req.headers['x-portal'];
             const result = await auth_service_1.AuthService.login({ email, password });
+            const userRole = result.user.role || 'user';
+            if (!(0, portalRoles_1.isRoleAllowedForPortal)(portalHeader, userRole)) {
+                return res.status(403).json({ success: false, message: 'Role not allowed for this portal' });
+            }
             const userProfile = {
                 id: result.user.id,
                 email: result.user.email,

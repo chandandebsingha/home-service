@@ -30,6 +30,12 @@ exports.registerRules = [
         validator: validation_middleware_1.Validators.minLength(2),
         message: 'Full name must be at least 2 characters',
     },
+    {
+        field: 'role',
+        validator: (v) => v === undefined || ['user', 'admin', 'partner'].includes(v),
+        message: 'Invalid role',
+        optional: true,
+    },
 ];
 exports.loginSchema = exports.loginRules;
 exports.registerSchema = exports.registerRules;

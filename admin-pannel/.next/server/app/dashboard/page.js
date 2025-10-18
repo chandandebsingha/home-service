@@ -545,7 +545,7 @@ module.exports = require("next/dist/server/app-render/dynamic-access-async-stora
 
 /***/ }),
 
-/***/ "../app-render/work-async-storage.external":
+/***/ "./work-async-storage.external":
 /*!*****************************************************************************!*\
   !*** external "next/dist/server/app-render/work-async-storage.external.js" ***!
   \*****************************************************************************/
@@ -651,7 +651,7 @@ module.exports = require("util");
 var __webpack_require__ = require("../../webpack-runtime.js");
 __webpack_require__.C(exports);
 var __webpack_exec__ = (moduleId) => (__webpack_require__(__webpack_require__.s = moduleId))
-var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/next","vendor-chunks/@swc","vendor-chunks/@radix-ui","vendor-chunks/tailwind-merge","vendor-chunks/class-variance-authority","vendor-chunks/clsx","vendor-chunks/lucide-react","vendor-chunks/tslib","vendor-chunks/react-remove-scroll","vendor-chunks/aria-hidden","vendor-chunks/react-remove-scroll-bar","vendor-chunks/use-callback-ref","vendor-chunks/use-sidecar","vendor-chunks/react-style-singleton","vendor-chunks/get-nonce","vendor-chunks/@floating-ui","vendor-chunks/use-sync-external-store"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fdashboard%2Fpage&page=%2Fdashboard%2Fpage&appPaths=%2Fdashboard%2Fpage&pagePath=private-next-app-dir%2Fdashboard%2Fpage.tsx&appDir=D%3A%5CMI%5Chome-service%5Chome-service%5Cadmin-pannel%5Csrc%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=D%3A%5CMI%5Chome-service%5Chome-service%5Cadmin-pannel&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!")));
+var __webpack_exports__ = __webpack_require__.X(0, ["vendor-chunks/next","vendor-chunks/@swc","vendor-chunks/@radix-ui","vendor-chunks/tailwind-merge","vendor-chunks/class-variance-authority","vendor-chunks/clsx","vendor-chunks/lucide-react","vendor-chunks/react-remove-scroll","vendor-chunks/@floating-ui","vendor-chunks/react-style-singleton","vendor-chunks/react-remove-scroll-bar","vendor-chunks/use-callback-ref","vendor-chunks/use-sync-external-store","vendor-chunks/use-sidecar","vendor-chunks/tslib","vendor-chunks/get-nonce","vendor-chunks/aria-hidden"], () => (__webpack_exec__("(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fdashboard%2Fpage&page=%2Fdashboard%2Fpage&appPaths=%2Fdashboard%2Fpage&pagePath=private-next-app-dir%2Fdashboard%2Fpage.tsx&appDir=D%3A%5CMI%5Chome-service%5Chome-service%5Cadmin-pannel%5Csrc%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=D%3A%5CMI%5Chome-service%5Chome-service%5Cadmin-pannel&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!")));
 module.exports = __webpack_exports__;
 
 })();

@@ -1,13 +1,13 @@
-import * as schema from '../../drizzle/schema';
+import * as schema from '../../build/drizzle/schema';
 export declare class BookingService {
     static ensureServiceExists(serviceId: number): Promise<boolean>;
     static create(payload: schema.NewBooking): Promise<{
-        date: string;
         id: number;
         createdAt: Date;
         userId: number;
         price: number;
         serviceId: number;
+        date: string;
         time: string;
         address: string;
         specialInstructions: string | null;

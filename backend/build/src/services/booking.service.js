@@ -35,7 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BookingService = void 0;
 const db_1 = require("../db");
-const schema = __importStar(require("../../drizzle/schema"));
+const schema = __importStar(require("../../build/drizzle/schema"));
 const drizzle_orm_1 = require("drizzle-orm");
 class BookingService {
     static async ensureServiceExists(serviceId) {

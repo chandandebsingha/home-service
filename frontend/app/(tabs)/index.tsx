@@ -25,6 +25,7 @@ type UICategory = {
 	title: string;
 	description?: string;
 	icon: string;
+	isEmoji?: boolean;
 	color: string;
 };
 
@@ -138,19 +139,24 @@ export default function HomeScreen({
 		apiService
 			.listCategories()
 			.then((res) => {
+				console.debug("listCategories response", res);
 				if (!mounted) return;
 				if (res.success && Array.isArray(res.data)) {
 					// Map backend category shape to UI-friendly fields
-					const mapped = res.data.map(
-						(c: Category) =>
-							({
-								id: String(c.id),
-								title: c.name || "",
-								description: c.description || "",
-								icon: (c.icon as string) || "cleaning-services",
-								color: (c.color as string) || "#3b82f6",
-							} as UICategory)
-					);
+					const mapped = res.data.map((c: Category) => {
+						const emoji = (c as any).emoji ? String((c as any).emoji) : "";
+						const iconField =
+							emoji || (c.icon as string) || "cleaning-services";
+						return {
+							id: String(c.id),
+							title: c.name || "",
+							description: c.description || "",
+							icon: iconField,
+							color: (c.color as string) || "#3b82f6",
+							isEmoji: Boolean(emoji),
+						} as UICategory;
+					});
+					console.debug("mapped categories", mapped);
 					setServiceCategories(mapped);
 				} else {
 					setCategoriesError(res.error || "Failed to load categories");
@@ -340,11 +346,23 @@ export default function HomeScreen({
 											{ backgroundColor: `${category.color}15` },
 										]}
 									>
-										<MaterialIcons
-											name={category.icon as any}
-											size={32}
-											color={category.color}
-										/>
+										{category.isEmoji ? (
+											<Text
+												style={{
+													fontSize: 28,
+													color: category.color,
+													textAlign: "center",
+												}}
+											>
+												{category.icon}
+											</Text>
+										) : (
+											<MaterialIcons
+												name={category.icon as any}
+												size={32}
+												color={category.color}
+											/>
+										)}
 									</View>
 									<View style={styles.categoryInfo}>
 										<Text style={styles.categoryTitle}>{category.title}</Text>

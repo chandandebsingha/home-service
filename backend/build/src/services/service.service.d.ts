@@ -1,4 +1,4 @@
-import { services } from '../../drizzle/schema';
+import { services } from '../../build/drizzle/schema';
 export declare class ServiceService {
     static ensureTable(): import("drizzle-orm/pg-core").PgTableWithColumns<{
         name: "services";
@@ -230,8 +230,8 @@ export declare class ServiceService {
     }>;
     static create(newService: typeof services.$inferInsert): Promise<{
         id: number;
-        name: string;
         createdAt: Date;
+        name: string;
         description: string | null;
         updatedAt: Date;
         categoryId: number | null;

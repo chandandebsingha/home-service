@@ -2,12 +2,12 @@ import { LoginRequest, RegisterRequest } from '../types/auth.types';
 export declare class AuthService {
     static register(userData: RegisterRequest): Promise<{
         user: {
-            role: "user" | "admin" | "partner" | null;
             id: number;
             supabaseUid: string;
             email: string;
             passwordHash: string | null;
             fullName: string;
+            role: "user" | "admin" | "partner" | null;
             isEmailVerified: boolean;
             lastLogin: Date | null;
             createdAt: Date;
@@ -17,12 +17,12 @@ export declare class AuthService {
     }>;
     static login(loginData: LoginRequest): Promise<{
         user: {
-            role: "user" | "admin" | "partner" | null;
             id: number;
             supabaseUid: string;
             email: string;
             passwordHash: string | null;
             fullName: string;
+            role: "user" | "admin" | "partner" | null;
             isEmailVerified: boolean;
             lastLogin: Date | null;
             createdAt: Date;
@@ -34,12 +34,12 @@ export declare class AuthService {
         success: boolean;
     }>;
     static getProfile(userId: number): Promise<{
-        role: "user" | "admin" | "partner" | null;
         id: number;
         supabaseUid: string;
         email: string;
         passwordHash: string | null;
         fullName: string;
+        role: "user" | "admin" | "partner" | null;
         isEmailVerified: boolean;
         lastLogin: Date | null;
         createdAt: Date;
