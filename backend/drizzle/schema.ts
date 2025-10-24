@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, boolean, integer, uniqueIndex, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, boolean, integer, uniqueIndex, pgEnum, numeric } from 'drizzle-orm/pg-core';
 export const roleEnum = pgEnum("role", ["user", "admin", "partner"]);
 // Users table
 export const users = pgTable('users', {
@@ -17,6 +17,23 @@ export const users = pgTable('users', {
     supabaseUidIdx: uniqueIndex('supabase_uid_idx').on(table.supabaseUid),
   };
 });
+
+export const address=pgTable('address',{
+  id:serial('id').primaryKey(),
+  userId:integer('user_id').references(()=>users.id).notNull(),
+  street:text('street').notNull(),
+  landmark:text('landmark'),
+  apartment:text('apartment'),
+  city:text('city').notNull(),
+  state:text('state').notNull(),
+  pinCode:text('pin_code').notNull(),
+  country:text('country').notNull(),
+  latitude: numeric('latitude', { precision: 10, scale: 8 }),
+  longitude: numeric('longitude', { precision: 11, scale: 8 }),
+  isDefault:boolean('is_default').default(false).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+})
 
 // User sessions table
 export const userSessions = pgTable('user_sessions', {
@@ -125,3 +142,4 @@ export type Occupation = typeof occupations.$inferSelect;
 export type NewOccupation = typeof occupations.$inferInsert;
 export type ProviderProfile = typeof providerProfiles.$inferSelect;
 export type NewProviderProfile = typeof providerProfiles.$inferInsert;
+export type Address = typeof address.$inferSelect;

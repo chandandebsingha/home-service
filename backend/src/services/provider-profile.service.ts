@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { providerProfiles, users, occupations } from '../../build/drizzle/schema';
+import { providerProfiles, users, occupations } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
 
 export class ProviderProfileService {

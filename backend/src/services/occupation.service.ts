@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { occupations } from '../../build/drizzle/schema';
+import { occupations } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
 
 export class OccupationService {

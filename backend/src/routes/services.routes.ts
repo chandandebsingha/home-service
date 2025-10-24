@@ -8,11 +8,6 @@ import {
 	validateRequest,
 	Validators,
 } from "../middleware/validation.middleware";
-import {
-	services,
-	serviceCategories,
-	serviceTypes,
-} from "../../build/drizzle/schema";
 import { db } from "../db";
 import { eq, sql } from "drizzle-orm";
 

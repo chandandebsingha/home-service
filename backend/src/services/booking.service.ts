@@ -1,5 +1,5 @@
 import { db } from '../db';
-import * as schema from '../../build/drizzle/schema';
+import * as schema from '../../drizzle/schema';
 import { eq, desc } from 'drizzle-orm';
 
 export class BookingService {

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import bcrypt from 'bcrypt';
 import { db } from '../db';
-import { users, type NewUser } from '../../build/drizzle/schema';
+import { users, type NewUser } from '../../drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { SupabaseService } from '../services/supabase.service';
 

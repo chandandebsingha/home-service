@@ -1,5 +1,5 @@
 import { db } from '../db';
-import { services, serviceCategories, serviceTypes, bookings } from '../../build/drizzle/schema';
+import { services, serviceCategories, serviceTypes, bookings } from '../../drizzle/schema';
 import { and, eq } from 'drizzle-orm';
 
 export class ServiceService {
