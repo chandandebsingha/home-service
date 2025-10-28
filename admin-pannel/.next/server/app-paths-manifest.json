@@ -1,1 +1,9 @@
-{}
+{
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/admin/types/page": "app/admin/types/page.js",
+  "/admin/services/page": "app/admin/services/page.js",
+  "/provider/bookings/page": "app/provider/bookings/page.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/partner/page": "app/partner/page.js"
+}

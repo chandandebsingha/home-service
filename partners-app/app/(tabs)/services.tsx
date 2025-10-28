@@ -125,7 +125,7 @@ export default function ServicesScreen() {
 			</View>
 			<Text style={styles.serviceDescription}>{service.description}</Text>
 			<View style={styles.serviceFooter}>
-				<Text style={styles.servicePrice}>${service.price}</Text>
+				<Text style={styles.servicePrice}>₹ {service.price}</Text>
 				<View style={styles.actionButtons}>
 					<TouchableOpacity
 						style={styles.editButton}

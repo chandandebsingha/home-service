@@ -135,7 +135,7 @@ export default async function Page() {
                         </div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-blue-600">${service.price}</div>
+                        <div className="font-semibold text-blue-600">₹ {service.price}</div>
                         {service.durationMinutes && (
                           <div className="text-xs text-gray-500">{service.durationMinutes}min</div>
                         )}
@@ -215,7 +215,7 @@ export default async function Page() {
                             <TableCell className="font-medium">{service.id}</TableCell>
                             <TableCell>{service.name}</TableCell>
                             <TableCell className="max-w-xs truncate">{service.description || "-"}</TableCell>
-                            <TableCell>${service.price}</TableCell>
+                            <TableCell>₹ {service.price}</TableCell>
                             <TableCell>{service.serviceType || "-"}</TableCell>
                             <TableCell>
                               <Badge variant={service.availability ? "default" : "secondary"}>

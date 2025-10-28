@@ -29,6 +29,28 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiGet, apiPost, getApiUrl } from "@/lib/api";
 import { AuthGuard } from "@/components/auth-guard";
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+const HOME_SERVICE_CATEGORIES = [
+  "Home Maintenance & Repair",
+  "Cleaning & Pest Control",
+  "Home Interior & Renovation",
+  "Appliance Services",
+  "Beauty & Personal Care",
+  "Home Chef & Catering",
+  "Laundry & Fabric Care",
+  "Child & Elderly Care",
+  "Home Security & Smart Devices",
+  "Vehicle Care",
+  "Gardening & Outdoor",
+  "Moving & Storage",
+  "IT & Smart Support",
+  "Home Utility Services",
+  "Tutoring & Home Classes",
+  "Other",
+];
+
+
 interface Category {
 	id: number;
 	name: string;
@@ -209,24 +231,59 @@ export default function CategoriesPage() {
 								</DialogTitle>
 							</DialogHeader>
 							<form onSubmit={handleSubmit} className="space-y-4">
-								{error && (
+								{/* {error && (
 									<Alert variant="destructive">
 										<AlertDescription>{error}</AlertDescription>
 									</Alert>
-								)}
+								)} */}
 
 								<div className="space-y-2">
-									<Label htmlFor="name">Category Name</Label>
-									<Input
-										id="name"
-										value={formData.name}
-										onChange={(e) =>
-											setFormData((prev) => ({ ...prev, name: e.target.value }))
-										}
-										required
-										placeholder="e.g., Plumbing, Electrical, Cleaning"
-									/>
-								</div>
+  <Label htmlFor="name">Category Name</Label>
+
+  <Select
+    value={
+      HOME_SERVICE_CATEGORIES.includes(formData.name)
+        ? formData.name
+        : "Other"
+    }
+    onValueChange={(value) => {
+      if (value === "Other") {
+        setFormData((prev) => ({ ...prev, name: "" }));
+      } else {
+        setFormData((prev) => ({ ...prev, name: value }));
+      }
+    }}
+  >
+    <SelectTrigger className="w-full">
+      <SelectValue placeholder="Select a category" />
+    </SelectTrigger>
+    <SelectContent>
+      {HOME_SERVICE_CATEGORIES.map((cat) => (
+        <SelectItem key={cat} value={cat}>
+          {cat}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+
+  {/* Show input box if 'Other' is selected */}
+  {(!HOME_SERVICE_CATEGORIES.includes(formData.name) ||
+    formData.name === "") && (
+    <div className="mt-3 space-y-2">
+      <Label htmlFor="customCategory">Enter Custom Category</Label>
+      <Input
+        id="customCategory"
+        value={formData.name}
+        onChange={(e) =>
+          setFormData((prev) => ({ ...prev, name: e.target.value }))
+        }
+        placeholder="e.g., Pet Grooming, Handyman Services"
+        required
+      />
+    </div>
+  )}
+</div>
+
 
 								<div className="space-y-2">
 									<Label htmlFor="description">Description</Label>

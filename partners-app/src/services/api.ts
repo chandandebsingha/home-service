@@ -1,4 +1,4 @@
-import { API_CONFIG, getApiUrl } from '../config/api';
+import { API_CONFIG, getApiUrl } from "../config/api";
 
 // Types for API responses
 export interface ApiResponse<T = any> {
@@ -69,7 +69,7 @@ export interface Booking {
   address: string;
   specialInstructions?: string;
   price: number;
-  status: 'upcoming' | 'completed' | 'cancelled';
+  status: "upcoming" | "completed" | "cancelled";
   createdAt?: string;
 }
 
@@ -98,7 +98,7 @@ class ApiService {
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {
     const url = getApiUrl(endpoint);
-    
+
     const config: RequestInit = {
       ...options,
       headers: {
@@ -109,10 +109,14 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      const contentType = response.headers.get('content-type') || '';
+      const contentType = response.headers.get("content-type") || "";
       const rawText = await response.text();
       let parsed: any = null;
-      if (contentType.includes('application/json') || rawText.trim().startsWith('{') || rawText.trim().startsWith('[')) {
+      if (
+        contentType.includes("application/json") ||
+        rawText.trim().startsWith("{") ||
+        rawText.trim().startsWith("[")
+      ) {
         try {
           parsed = JSON.parse(rawText);
         } catch (err) {
@@ -123,10 +127,12 @@ class ApiService {
         }
       } else {
         if (!response.ok) {
-          const snippet = rawText?.slice(0, 120) || '';
+          const snippet = rawText?.slice(0, 120) || "";
           return {
             success: false,
-            error: `HTTP ${response.status} ${response.statusText} at ${url}${snippet ? ` - ${snippet}` : ''}`,
+            error: `HTTP ${response.status} ${response.statusText} at ${url}${
+              snippet ? ` - ${snippet}` : ""
+            }`,
           };
         }
         // Unexpected non-JSON success; surface minimal info
@@ -139,7 +145,11 @@ class ApiService {
       if (!response.ok) {
         return {
           success: false,
-          error: parsed?.message || `HTTP ${response.status}: ${response.statusText} at ${url}`,
+          // Prefer `error` (used by backend), then `message`, then a generic HTTP fallback
+          error:
+            parsed?.error ||
+            parsed?.message ||
+            `HTTP ${response.status}: ${response.statusText} at ${url}`,
         };
       }
 
@@ -150,7 +160,8 @@ class ApiService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Network error occurred',
+        error:
+          error instanceof Error ? error.message : "Network error occurred",
       };
     }
   }
@@ -158,7 +169,7 @@ class ApiService {
   // Authentication methods
   async login(credentials: LoginRequest): Promise<ApiResponse<AuthResponse>> {
     const res = await this.request<any>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(credentials),
     });
     if (!res.success) return res;
@@ -168,9 +179,11 @@ class ApiService {
     };
   }
 
-  async register(userData: RegisterRequest): Promise<ApiResponse<AuthResponse>> {
+  async register(
+    userData: RegisterRequest
+  ): Promise<ApiResponse<AuthResponse>> {
     const res = await this.request<any>(API_CONFIG.ENDPOINTS.AUTH.REGISTER, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify(userData),
     });
     if (!res.success) return res;
@@ -182,7 +195,7 @@ class ApiService {
 
   async logout(token: string): Promise<ApiResponse> {
     return this.request(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {
-      method: 'POST',
+      method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -191,7 +204,7 @@ class ApiService {
 
   async getProfile(token: string): Promise<ApiResponse<User>> {
     const res = await this.request<any>(API_CONFIG.ENDPOINTS.AUTH.PROFILE, {
-      method: 'GET',
+      method: "GET",
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -204,65 +217,99 @@ class ApiService {
   }
 
   // Services
-  async listServices(limit = 50, offset = 0, filters?: { categoryId?: number; serviceTypeId?: number }): Promise<ApiResponse<Service[]>> {
-    const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
-    if (filters?.categoryId != null) params.append('categoryId', String(filters.categoryId));
-    if (filters?.serviceTypeId != null) params.append('serviceTypeId', String(filters.serviceTypeId));
-    const res = await this.request<any>(`${API_CONFIG.ENDPOINTS.SERVICES.LIST}?${params.toString()}`, {
-      method: 'GET',
+  async listServices(
+    limit = 50,
+    offset = 0,
+    filters?: { categoryId?: number; serviceTypeId?: number }
+  ): Promise<ApiResponse<Service[]>> {
+    const params = new URLSearchParams({
+      limit: String(limit),
+      offset: String(offset),
     });
+    if (filters?.categoryId != null)
+      params.append("categoryId", String(filters.categoryId));
+    if (filters?.serviceTypeId != null)
+      params.append("serviceTypeId", String(filters.serviceTypeId));
+    const res = await this.request<any>(
+      `${API_CONFIG.ENDPOINTS.SERVICES.LIST}?${params.toString()}`,
+      {
+        method: "GET",
+      }
+    );
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Service[] };
   }
 
   async getService(id: number): Promise<ApiResponse<Service>> {
-    const res = await this.request<any>(API_CONFIG.ENDPOINTS.SERVICES.DETAIL(id), {
-      method: 'GET',
-    });
+    const res = await this.request<any>(
+      API_CONFIG.ENDPOINTS.SERVICES.DETAIL(id),
+      {
+        method: "GET",
+      }
+    );
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Service };
   }
 
-  async createService(token: string, payload: CreateServiceRequest): Promise<ApiResponse<Service>> {
-    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.CREATE, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-    });
+  async createService(
+    token: string,
+    payload: CreateServiceRequest
+  ): Promise<ApiResponse<Service>> {
+    const res = await this.request<any>(
+      API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.CREATE,
+      {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      }
+    );
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Service };
   }
 
   async listMyServices(token: string): Promise<ApiResponse<Service[]>> {
-    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.LIST, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await this.request<any>(
+      API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.LIST,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Service[] };
   }
 
-  async updateMyService(token: string, id: number, payload: Partial<CreateServiceRequest>): Promise<ApiResponse<Service>> {
-    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.UPDATE(id), {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
-    });
+  async updateMyService(
+    token: string,
+    id: number,
+    payload: Partial<CreateServiceRequest>
+  ): Promise<ApiResponse<Service>> {
+    const res = await this.request<any>(
+      API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.UPDATE(id),
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify(payload),
+      }
+    );
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Service };
   }
 
   async deleteMyService(token: string, id: number): Promise<ApiResponse> {
     return this.request(API_CONFIG.ENDPOINTS.PROVIDER.SERVICES.DELETE(id), {
-      method: 'DELETE',
+      method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
   }
 
   // Bookings
-  async createBooking(token: string, payload: CreateBookingRequest): Promise<ApiResponse<Booking>> {
-    const res = await this.request<any>('/bookings', {
-      method: 'POST',
+  async createBooking(
+    token: string,
+    payload: CreateBookingRequest
+  ): Promise<ApiResponse<Booking>> {
+    const res = await this.request<any>("/bookings", {
+      method: "POST",
       headers: { Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload),
     });
@@ -271,28 +318,69 @@ class ApiService {
   }
 
   async listMyBookings(token: string): Promise<ApiResponse<Booking[]>> {
-    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.BOOKINGS.LIST, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const res = await this.request<any>(
+      API_CONFIG.ENDPOINTS.PROVIDER.BOOKINGS.LIST,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Booking[] };
   }
 
-  async updateBookingStatus(token: string, id: number, status: string): Promise<ApiResponse<Booking>> {
-    const res = await this.request<any>(API_CONFIG.ENDPOINTS.PROVIDER.BOOKINGS.UPDATE_STATUS(id), {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ status }),
-    });
+  // Partner-specific bookings (for users with partner role)
+  async listPartnerBookings(token: string): Promise<ApiResponse<Booking[]>> {
+    const res = await this.request<any>(
+      API_CONFIG.ENDPOINTS.PARTNER.BOOKINGS.LIST,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Booking[] };
+  }
+
+  async updateBookingStatus(
+    token: string,
+    id: number,
+    status: string
+  ): Promise<ApiResponse<Booking>> {
+    const res = await this.request<any>(
+      API_CONFIG.ENDPOINTS.PROVIDER.BOOKINGS.UPDATE_STATUS(id),
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      }
+    );
+    if (!res.success) return res;
+    return { success: true, data: res.data?.data as Booking };
+  }
+
+  // Partner update booking status (partners can update bookings for their services)
+  async updatePartnerBookingStatus(
+    token: string,
+    id: number,
+    status: string
+  ): Promise<ApiResponse<Booking>> {
+    const res = await this.request<any>(
+      API_CONFIG.ENDPOINTS.PARTNER.BOOKINGS.UPDATE_STATUS(id),
+      {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ status }),
+      }
+    );
     if (!res.success) return res;
     return { success: true, data: res.data?.data as Booking };
   }
 
   // Health check
   async healthCheck(): Promise<ApiResponse> {
-    return this.request('/', {
-      method: 'GET',
+    return this.request("/", {
+      method: "GET",
     });
   }
 }

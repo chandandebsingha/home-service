@@ -149,7 +149,7 @@ export default function AddServiceScreen() {
 				placeholder="e.g., AC Repair"
 			/>
 
-			<Text style={styles.label}>Price ($)</Text>
+			<Text style={styles.label}>Price ( ₹ )</Text>
 			<TextInput
 				value={String(form.price ?? "")}
 				onChangeText={(t) => update("price", toNum(t))}

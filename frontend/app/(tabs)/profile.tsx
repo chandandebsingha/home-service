@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,48 +6,48 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { router } from 'expo-router';
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { MaterialIcons } from "@expo/vector-icons";
+import { useAuth } from "../../src/contexts/AuthContext";
+import { router } from "expo-router";
 
 const profileOptions = [
   {
-    id: 'addresses',
-    title: 'Manage Addresses',
-    icon: 'location-on',
-    color: '#3b82f6',
+    id: "addresses",
+    title: "Manage Addresses",
+    icon: "location-on",
+    color: "#3b82f6",
   },
   {
-    id:'services',
-    title: 'View All Services',
-    icon: 'build',
-    color: '#f97316',
+    id: "services",
+    title: "View All Services",
+    icon: "build",
+    color: "#f97316",
   },
   {
-    id: 'payments',
-    title: 'Payment Methods',
-    icon: 'payment',
-    color: '#10b981',
+    id: "payments",
+    title: "Payment Methods",
+    icon: "payment",
+    color: "#10b981",
   },
   {
-    id: 'notifications',
-    title: 'Notifications',
-    icon: 'notifications',
-    color: '#f59e0b',
+    id: "notifications",
+    title: "Notifications",
+    icon: "notifications",
+    color: "#f59e0b",
   },
   {
-    id: 'help',
-    title: 'Help & Support',
-    icon: 'help',
-    color: '#8b5cf6',
+    id: "help",
+    title: "Help & Support",
+    icon: "help",
+    color: "#8b5cf6",
   },
   {
-    id: 'about',
-    title: 'About',
-    icon: 'info',
-    color: '#6b7280',
+    id: "about",
+    title: "About",
+    icon: "info",
+    color: "#6b7280",
   },
 ];
 
@@ -55,18 +55,14 @@ export default function ProfileScreen() {
   const { user, isAuthenticated, logout, isLoading } = useAuth();
 
   const handleOptionPress = (optionId: string) => {
-    Alert.alert('Feature', `${optionId} feature will be implemented soon!`);
+    Alert.alert("Feature", `${optionId} feature will be implemented soon!`);
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', onPress: logout, style: 'destructive' },
-      ]
-    );
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      { text: "Logout", onPress: logout, style: "destructive" },
+    ]);
   };
 
   // Show login screen if not authenticated
@@ -79,9 +75,9 @@ export default function ProfileScreen() {
           <Text style={styles.loginPromptText}>
             Sign in to view your profile and manage your account
           </Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.signInButton}
-            onPress={() => router.push('/auth/login')}
+            onPress={() => router.push("/auth/login")}
           >
             <Text style={styles.signInButtonText}>Sign In</Text>
           </TouchableOpacity>
@@ -103,19 +99,26 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
-              {user ? `${user.fullName.split(' ')[0].charAt(0)}${(user.fullName.split(' ')[1] || '').charAt(0)}` : 'U'}
+              {user
+                ? `${user.fullName.split(" ")[0].charAt(0)}${(
+                    user.fullName.split(" ")[1] || ""
+                  ).charAt(0)}`
+                : "U"}
             </Text>
           </View>
-          <Text style={styles.userName}>
-            {user ? user.fullName : 'User'}
+          <Text style={styles.userName}>{user ? user.fullName : "User"}</Text>
+          <Text style={styles.userEmail}>
+            {user?.email || "user@example.com"}
           </Text>
-          <Text style={styles.userEmail}>{user?.email || 'user@example.com'}</Text>
-          
+
           <TouchableOpacity style={styles.editButton}>
             <MaterialIcons name="edit" size={16} color="#6366f1" />
             <Text style={styles.editButtonText}>Edit Profile</Text>
@@ -147,11 +150,26 @@ export default function ProfileScreen() {
             <TouchableOpacity
               key={option.id}
               style={styles.optionItem}
-              onPress={() => handleOptionPress(option.title)}
+              onPress={() => {
+                if (option.id === "addresses") {
+                  router.push("/addresses" as any);
+                } else {
+                  handleOptionPress(option.title);
+                }
+              }}
               activeOpacity={0.7}
             >
-              <View style={[styles.optionIcon, { backgroundColor: `${option.color}15` }]}>
-                <MaterialIcons name={option.icon as any} size={24} color={option.color} />
+              <View
+                style={[
+                  styles.optionIcon,
+                  { backgroundColor: `${option.color}15` },
+                ]}
+              >
+                <MaterialIcons
+                  name={option.icon as any}
+                  size={24}
+                  color={option.color}
+                />
               </View>
               <Text style={styles.optionTitle}>{option.title}</Text>
               <MaterialIcons name="chevron-right" size={24} color="#9ca3af" />
@@ -162,17 +180,23 @@ export default function ProfileScreen() {
         {/* App Info */}
         <View style={styles.appInfoContainer}>
           <Text style={styles.sectionTitle}>App Information</Text>
-          
-          <TouchableOpacity style={styles.optionItem} onPress={() => handleOptionPress('Terms')}>
-            <View style={[styles.optionIcon, { backgroundColor: '#f3f4f615' }]}>
+
+          <TouchableOpacity
+            style={styles.optionItem}
+            onPress={() => handleOptionPress("Terms")}
+          >
+            <View style={[styles.optionIcon, { backgroundColor: "#f3f4f615" }]}>
               <MaterialIcons name="description" size={24} color="#6b7280" />
             </View>
             <Text style={styles.optionTitle}>Terms & Conditions</Text>
             <MaterialIcons name="chevron-right" size={24} color="#9ca3af" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.optionItem} onPress={() => handleOptionPress('Privacy')}>
-            <View style={[styles.optionIcon, { backgroundColor: '#f3f4f615' }]}>
+          <TouchableOpacity
+            style={styles.optionItem}
+            onPress={() => handleOptionPress("Privacy")}
+          >
+            <View style={[styles.optionIcon, { backgroundColor: "#f3f4f615" }]}>
               <MaterialIcons name="privacy-tip" size={24} color="#6b7280" />
             </View>
             <Text style={styles.optionTitle}>Privacy Policy</Text>
@@ -197,14 +221,14 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
   },
   scrollView: {
     flex: 1,
   },
   profileHeader: {
-    backgroundColor: '#fff',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    alignItems: "center",
     paddingVertical: 32,
     paddingHorizontal: 20,
     marginBottom: 20,
@@ -213,52 +237,52 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#6366f1',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#6366f1",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 16,
   },
   avatarText: {
     fontSize: 32,
-    fontWeight: '700',
-    color: '#fff',
+    fontWeight: "700",
+    color: "#fff",
   },
   userName: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#1f2937',
+    fontWeight: "700",
+    color: "#1f2937",
     marginBottom: 4,
   },
   userEmail: {
     fontSize: 16,
-    color: '#6b7280',
+    color: "#6b7280",
     marginBottom: 4,
   },
   userPhone: {
     fontSize: 16,
-    color: '#6b7280',
+    color: "#6b7280",
     marginBottom: 16,
   },
   editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f0f0ff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f0f0ff",
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
   editButtonText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#6366f1',
+    fontWeight: "600",
+    color: "#6366f1",
     marginLeft: 6,
   },
   statsContainer: {
-    backgroundColor: '#fff',
-    flexDirection: 'row',
+    backgroundColor: "#fff",
+    flexDirection: "row",
     paddingVertical: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -266,28 +290,28 @@ const styles = StyleSheet.create({
   },
   statItem: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
   },
   statNumber: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#1f2937',
+    fontWeight: "700",
+    color: "#1f2937",
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 14,
-    color: '#6b7280',
+    color: "#6b7280",
   },
   statDivider: {
     width: 1,
-    backgroundColor: '#e5e7eb',
+    backgroundColor: "#e5e7eb",
     marginVertical: 8,
   },
   optionsContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingVertical: 8,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -295,40 +319,40 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#1f2937',
+    fontWeight: "600",
+    color: "#1f2937",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: "#f3f4f6",
   },
   optionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f9fafb',
+    borderBottomColor: "#f9fafb",
   },
   optionIcon: {
     width: 40,
     height: 40,
     borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 16,
   },
   optionTitle: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '500',
-    color: '#1f2937',
+    fontWeight: "500",
+    color: "#1f2937",
   },
   appInfoContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingVertical: 8,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -337,22 +361,22 @@ const styles = StyleSheet.create({
   versionInfo: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   versionText: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: "#9ca3af",
   },
   logoutButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#fff",
     marginHorizontal: 20,
     paddingVertical: 16,
     borderRadius: 12,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -360,48 +384,48 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#ef4444',
+    fontWeight: "600",
+    color: "#ef4444",
     marginLeft: 8,
   },
   loginPromptContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingHorizontal: 40,
   },
   loginPromptTitle: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#1f2937',
+    fontWeight: "700",
+    color: "#1f2937",
     marginTop: 16,
     marginBottom: 8,
   },
   loginPromptText: {
     fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
+    color: "#6b7280",
+    textAlign: "center",
     marginBottom: 32,
     lineHeight: 24,
   },
   signInButton: {
-    backgroundColor: '#6366f1',
+    backgroundColor: "#6366f1",
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,
   },
   signInButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 18,
-    color: '#6b7280',
+    color: "#6b7280",
   },
 });
