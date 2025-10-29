@@ -5,8 +5,8 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "androidStatusBar": {
-      "backgroundColor": "#FFFFFF"
+     "androidStatusBar": {
+      "backgroundColor": "#000000"
     },
     "splash": {
       "backgroundColor": "#FFFFFF",
@@ -40,7 +40,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#FFFFFF"
+          "backgroundColor": "#000"
         }
       ]
     ],
