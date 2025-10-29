@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
      "androidStatusBar": {
-      "backgroundColor": "#000000"
+      "backgroundColor": "#FFFFFF"
     },
     "splash": {
       "backgroundColor": "#FFFFFF",
@@ -45,7 +45,7 @@
           "image": "./assets/images/splash-image.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "backgroundColor": "#FFFFFF"
         }
       ]
     ],
