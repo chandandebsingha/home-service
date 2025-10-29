@@ -10,7 +10,7 @@
     },
     "splash": {
       "backgroundColor": "#FFFFFF",
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/images/splash-image.png",
       "resizeMode": "contain"
     },
     "scheme": "frontend",
@@ -25,7 +25,12 @@
         "backgroundColor": "#FFFFFF"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.chandanoffice.frontend"
+      "package": "com.chandanoffice.frontend",
+      "versionCode": 1,
+      "permissions": [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +42,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/splash-image.png",
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#000"
