@@ -9,7 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { apiService, Booking } from '../../src/services/api';
+import { apiService, Booking, Service } from '../../src/services/api';
 
 type BookingStatus = 'upcoming' | 'completed' | 'cancelled';
 
@@ -17,6 +17,7 @@ export default function BookingsScreen() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed'>('upcoming');
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const [serviceNames, setServiceNames] = useState<Record<number, Service>>( {} );
 
   useEffect(() => {
     let mounted = true;
@@ -26,7 +27,20 @@ export default function BookingsScreen() {
       if (!token) { setBookings([]); setLoading(false); return; }
       const res = await apiService.listMyBookings(token);
       if (!mounted) return;
-      if (res.success && res.data) setBookings(res.data);
+      if (res.success && res.data) {
+        setBookings(res.data);
+        // fetch service names for nicer titles
+        const uniqueServiceIds = Array.from(new Set(res.data.map(b => b.serviceId)));
+        const fetched = await Promise.all(
+          uniqueServiceIds.map(async (id) => {
+            const sres = await apiService.getService(id);
+            return sres.success && sres.data ? sres.data as Service : null;
+          })
+        );
+        const map: Record<number, Service> = {};
+        fetched.filter(Boolean).forEach((s) => { map[(s as Service).id] = s as Service; });
+        setServiceNames(map);
+      }
       setLoading(false);
     })();
     return () => { mounted = false; };
@@ -82,37 +96,47 @@ export default function BookingsScreen() {
         ) : (
           <View style={styles.bookingsList}>
             {filteredBookings.map((booking) => (
-              <View key={booking.id} style={styles.bookingCard}>
-                <View style={styles.bookingHeader}>
-                  <View style={styles.bookingInfo}>
-                    <Text style={styles.serviceName}>Service #{booking.serviceId}</Text>
-                    <Text style={styles.providerName}>{booking.address}</Text>
+              <TouchableOpacity 
+                key={booking.id} 
+                style={styles.bookingCard}
+                activeOpacity={0.6}
+              >
+                <View style={styles.cardContent}>
+                  <View style={styles.bookingHeader}>
+                    <View style={styles.bookingInfo}>
+                      <Text style={styles.serviceName}>
+                        {serviceNames[booking.serviceId]?.name || 'Service'}
+                      </Text>
+                      <Text style={styles.providerName} numberOfLines={1}>
+                        {booking.address}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        { borderColor: getStatusColor(booking.status) },
+                      ]}
+                    >
+                      <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                      </Text>
+                    </View>
                   </View>
-                  <View
-                    style={[
-                      styles.statusBadge,
-                      { backgroundColor: `${getStatusColor(booking.status)}15` },
-                    ]}
-                  >
-                    <Text style={[styles.statusText, { color: getStatusColor(booking.status) }]}>
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </Text>
-                  </View>
-                </View>
 
-                <View style={styles.bookingDetails}>
-                  <View style={styles.detailRow}>
-                    <MaterialIcons name="calendar-today" size={16} color="#6b7280" />
-                    <Text style={styles.detailText}>
-                      {booking.date} at {booking.time}
-                    </Text>
-                  </View>
-                  <View style={styles.detailRow}>
-                    <MaterialIcons name="attach-money" size={16} color="#6b7280" />
-                    <Text style={styles.detailText}>₹{booking.price}</Text>
+                  <View style={styles.bookingDetails}>
+                    <View style={styles.detailRow}>
+                      <MaterialIcons name="event" size={16} color="#9ca3af" />
+                      <Text style={styles.detailText}>
+                        {booking.date} · {booking.time}
+                      </Text>
+                    </View>
+                    <View style={styles.detailRow}>
+                      <MaterialIcons name="payments" size={16} color="#9ca3af" />
+                      <Text style={styles.priceText}>₹{booking.price.toLocaleString()}</Text>
+                    </View>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -186,54 +210,58 @@ const styles = StyleSheet.create({
   bookingCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#f0f0f0',
+  },
+  cardContent: {
     padding: 16,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
   },
   bookingHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   bookingInfo: {
     flex: 1,
+    marginRight: 12,
   },
   serviceName: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#1f2937',
+    color: '#111827',
     marginBottom: 4,
   },
   providerName: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6b7280',
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
   },
   bookingDetails: {
-    marginBottom: 16,
+    gap: 8,
   },
   detailRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 8,
   },
   detailText: {
     fontSize: 14,
     color: '#4b5563',
-    marginLeft: 8,
-    flex: 1,
+  },
+  priceText: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '600',
   },
 });

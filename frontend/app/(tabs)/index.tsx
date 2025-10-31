@@ -14,10 +14,10 @@ import {
 	Alert,
 } from "react-native";
 import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
-import apiService, { Category } from "../../src/services/api";
+import apiService, { Category, Address } from "../../src/services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // UI-friendly category shape used in this component
 type UICategory = {
@@ -74,6 +74,49 @@ export default function HomeScreen({
 	const listRef = useRef<FlatList<SliderImage>>(null);
 	const timer = useRef<ReturnType<typeof setInterval> | null>(null);
 
+	// Display user's saved address in header
+	const [headerAddress, setHeaderAddress] = useState<string>("");
+
+	useEffect(() => {
+		let mounted = true;
+		const ADDR_KEY = "addresses_local_v1";
+		const fmt = (a: Address) =>
+			[
+				a.street,
+				a.apartment,
+				[a.city, a.state, a.pinCode].filter(Boolean).join(", "),
+				a.country,
+			]
+				.filter(Boolean)
+				.join(", ");
+		(async () => {
+			try {
+				const token = await AsyncStorage.getItem("access_token");
+				let addrs: Address[] | undefined;
+				if (token) {
+					const res = await apiService.listMyAddresses(token);
+					if (res.success && res.data) {
+						addrs = res.data as Address[];
+						await AsyncStorage.setItem(ADDR_KEY, JSON.stringify(addrs));
+					}
+				}
+				if (!addrs) {
+					const local = await AsyncStorage.getItem(ADDR_KEY);
+					if (local) addrs = JSON.parse(local);
+				}
+				if (mounted && addrs && addrs.length) {
+					const def = addrs.find((a) => a.isDefault) || addrs[0];
+					setHeaderAddress(fmt(def));
+				}
+			} catch {
+				// ignore
+			}
+		})();
+		return () => {
+			mounted = false;
+		};
+	}, []);
+
 	const count = Array.isArray(images) ? images.length : 0;
 
 	const goTo = useCallback(
@@ -104,23 +147,15 @@ export default function HomeScreen({
 	};
 
 	const renderItem = ({ item }: { item: SliderImage }) => (
-		<TouchableOpacity activeOpacity={0.9}>
-			{/* Android needs overflow hidden to clip rounded corners */}
-			<View
-				style={{
-					width: SCREEN_WIDTH,
-					height,
-					borderRadius: rounded,
-					overflow: "hidden",
-				}}
-			>
+		<View style={styles.slideItem}>
+			<TouchableOpacity activeOpacity={0.9} style={styles.slideContent}>
 				<Image
 					source={{ uri: item.uri }}
-					style={{ width: "100%", height: "100%" }}
+					style={styles.slideImage}
 					resizeMode="cover"
 				/>
-			</View>
-		</TouchableOpacity>
+			</TouchableOpacity>
+		</View>
 	);
 
 	const [serviceCategories, setServiceCategories] = React.useState<
@@ -200,80 +235,71 @@ export default function HomeScreen({
 	// Show loading screen while checking authentication
 	if (isLoading) {
 		return (
-			<SafeAreaView style={styles.container}>
+			<View style={styles.container}>
 				<View style={styles.loadingContainer}>
 					<Text style={styles.loadingText}>Loading...</Text>
 				</View>
-			</SafeAreaView>
+			</View>
 		);
 	}
 
 	return (
-		<SafeAreaView style={styles.container}>
+		<View style={styles.container}>
 			<ScrollView
 				style={styles.scrollView}
 				showsVerticalScrollIndicator={false}
 				contentContainerStyle={styles.scrollContent}
 			>
-				{/* Header */}
+				{/* Header with Location */}
 				<View style={styles.header}>
-					<View style={styles.headerTop}>
-						<View>
-							<Text style={styles.greeting}>
-								Hello{user ? `, ${user.fullName.split(" ")[0]}` : ""}!
-							</Text>
-							<Text style={styles.subtitle}>
-								What service do you need today?
-							</Text>
-						</View>
-						{user?.role === "admin" && (
-							<View style={{ flexDirection: "row", gap: 8 }}>
-								<TouchableOpacity
-									onPress={() => router.push("/provider/add-service")}
-									style={{
-										paddingHorizontal: 12,
-										paddingVertical: 8,
-										backgroundColor: "#22c55e",
-										borderRadius: 8,
-									}}
-								>
-									<Text style={{ color: "#fff", fontWeight: "700" }}>
-										Add Service
-									</Text>
-								</TouchableOpacity>
-								<TouchableOpacity
-									onPress={() => router.push("/admin/dashboard")}
-									style={{
-										paddingHorizontal: 12,
-										paddingVertical: 8,
-										backgroundColor: "#0ea5e9",
-										borderRadius: 8,
-									}}
-								>
-									<Text style={{ color: "#fff", fontWeight: "700" }}>
-										Dashboard
-									</Text>
-								</TouchableOpacity>
-							</View>
-						)}
-					</View>
+					<TouchableOpacity
+						style={styles.locationContainer}
+						onPress={() => router.push("/addresses")}
+						activeOpacity={0.7}
+					>
+						<MaterialIcons name="location-on" size={20} color="#1f2937" />
+						<Text style={styles.locationText} numberOfLines={1} ellipsizeMode="tail">
+							{headerAddress || "Set your address"}
+						</Text>
+					</TouchableOpacity>
+					<TouchableOpacity style={styles.notificationButton}>
+						<MaterialIcons
+							name="notifications-none"
+							size={24}
+							color="#1f2937"
+						/>
+					</TouchableOpacity>
 				</View>
 
+				{/* Admin Controls */}
+				{user?.role === "admin" && (
+					<View style={styles.adminControls}>
+						<TouchableOpacity
+							onPress={() => router.push("/provider/add-service")}
+							style={styles.adminButton}
+						>
+							<Text style={styles.adminButtonText}>Add Service</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							onPress={() => router.push("/admin/dashboard")}
+							style={[styles.adminButton, { backgroundColor: "#0ea5e9" }]}
+						>
+							<Text style={styles.adminButtonText}>Dashboard</Text>
+						</TouchableOpacity>
+					</View>
+				)}
+
 				{/* Search Bar */}
-				<TouchableOpacity style={styles.searchBar}>
+				<TouchableOpacity style={styles.searchBar} onPress={() => router.push("/search")}>
 					<MaterialIcons name="search" size={20} color="#9ca3af" />
-					<Text style={styles.searchText}>Search for services</Text>
+					<Text style={styles.searchText}>
+						Search for services and packages
+					</Text>
 				</TouchableOpacity>
 
 				{/* Slider */}
 				{count > 0 ? (
-					<View
-						style={{
-							position: "relative",
-							marginHorizontal: 20,
-							marginBottom: 20,
-						}}
-					>
+					<View style={styles.sliderContainer}>
 						<FlatList
 							ref={listRef}
 							data={images}
@@ -281,16 +307,11 @@ export default function HomeScreen({
 							keyExtractor={(it) => it.id}
 							horizontal
 							pagingEnabled
-							nestedScrollEnabled
 							showsHorizontalScrollIndicator={false}
 							onMomentumScrollEnd={onMomentumEnd}
-							getItemLayout={(_, i) => ({
-								length: SCREEN_WIDTH,
-								offset: SCREEN_WIDTH * i,
-								index: i,
-							})}
-							removeClippedSubviews={Platform.OS === "android"}
-							windowSize={3}
+							snapToInterval={SCREEN_WIDTH}
+							decelerationRate="fast"
+							bounces={false}
 						/>
 						{showDots && (
 							<View style={styles.dotsWrap}>
@@ -308,74 +329,33 @@ export default function HomeScreen({
 						)}
 					</View>
 				) : (
-					// Optional skeleton/placeholder state
-					<View
-						style={{
-							height,
-							marginHorizontal: 20,
-							marginBottom: 20,
-							justifyContent: "center",
-							alignItems: "center",
-							backgroundColor: "#f3f4f6",
-							borderRadius: rounded,
-						}}
-					>
+					<View style={styles.sliderPlaceholder}>
 						<Text style={{ color: "#9ca3af" }}>No images</Text>
 					</View>
 				)}
 
-				{/* Service Categories */}
+				{/* Service Categories - Grid Layout */}
 				<View style={styles.categoriesSection}>
-					<Text style={styles.sectionTitle}>All Services</Text>
-					<View>
-						{serviceCategories.map((category, idx) => (
+					<View style={styles.categoryGrid}>
+						{serviceCategories.map((category) => (
 							<TouchableOpacity
 								key={category.id}
-								style={[
-									styles.categoryCard,
-									{ borderLeftColor: category.color },
-									idx !== 0 && { marginTop: 12 },
-								]}
+								style={styles.categoryGridItem}
 								onPress={() => handleCategoryPress(category.id)}
 								activeOpacity={0.7}
 							>
-								<View style={styles.categoryContent}>
-									<View
-										style={[
-											styles.iconContainer,
-											{ backgroundColor: `${category.color}15` },
-										]}
-									>
-										{category.isEmoji ? (
-											<Text
-												style={{
-													fontSize: 28,
-													color: category.color,
-													textAlign: "center",
-												}}
-											>
-												{category.icon}
-											</Text>
-										) : (
-											<MaterialIcons
-												name={category.icon as any}
-												size={32}
-												color={category.color}
-											/>
-										)}
-									</View>
-									<View style={styles.categoryInfo}>
-										<Text style={styles.categoryTitle}>{category.title}</Text>
-										<Text style={styles.categoryDescription}>
-											{category.description}
-										</Text>
-									</View>
-									<MaterialIcons
-										name="chevron-right"
-										size={24}
-										color="#9ca3af"
-									/>
+								<View style={styles.categoryIconWrapper}>
+									{category.isEmoji ? (
+										<Text style={styles.categoryEmoji}>{category.icon}</Text>
+									) : (
+										<MaterialIcons
+											name={category.icon as any}
+											size={36}
+											color="#1f2937"
+										/>
+									)}
 								</View>
+								<Text style={styles.categoryGridTitle}>{category.title}</Text>
 							</TouchableOpacity>
 						))}
 					</View>
@@ -400,57 +380,109 @@ export default function HomeScreen({
 					</View>
 				</View>
 			</ScrollView>
-		</SafeAreaView>
+		</View>
 	);
 }
 
 const styles = StyleSheet.create({
-	container: { flex: 1, backgroundColor: "#f8fafc" },
+	container: { flex: 1, backgroundColor: "#ffffff" },
 	scrollView: { flex: 1 },
 	scrollContent: { paddingBottom: 20 },
 	header: {
-		padding: 20,
-		backgroundColor: "#6366f1",
-		borderBottomLeftRadius: 24,
-		borderBottomRightRadius: 24,
-	},
-	headerTop: {
 		flexDirection: "row",
 		justifyContent: "space-between",
-		alignItems: "flex-start",
+		alignItems: "center",
+		paddingHorizontal: 20,
+		paddingTop: 12,
+		paddingBottom: 16,
+		backgroundColor: "#ffffff",
 	},
-	greeting: { fontSize: 24, fontWeight: "700", color: "#fff", marginBottom: 4 },
-	subtitle: { fontSize: 16, color: "#e0e7ff" },
-	logoutButton: {
+	locationContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		flex: 1,
+		paddingRight: 16,
+	},
+	locationText: {
+		marginLeft: 6,
+		fontSize: 14,
+		fontWeight: "600",
+		color: "#1f2937",
+		flex: 1,
+		flexShrink: 1,
+	},
+	notificationButton: {
 		padding: 8,
-		borderRadius: 8,
-		backgroundColor: "rgba(255,255,255,0.2)",
 	},
-	loginButton: {
-		paddingHorizontal: 16,
+	adminControls: {
+		flexDirection: "row",
+		gap: 8,
+		paddingHorizontal: 20,
+		marginBottom: 16,
+	},
+	adminButton: {
+		paddingHorizontal: 12,
 		paddingVertical: 8,
+		backgroundColor: "#22c55e",
 		borderRadius: 8,
-		backgroundColor: "rgba(255,255,255,0.2)",
 	},
-	loginButtonText: { color: "#fff", fontSize: 14, fontWeight: "600" },
-	loadingContainer: { flex: 1, justifyContent: "center", alignItems: "center" },
-	loadingText: { fontSize: 18, color: "#6b7280" },
+	adminButtonText: {
+		color: "#fff",
+		fontWeight: "700",
+		fontSize: 14,
+	},
+	loadingContainer: {
+		flex: 1,
+		justifyContent: "center",
+		alignItems: "center",
+	},
+	loadingText: {
+		fontSize: 18,
+		color: "#6b7280",
+	},
 	searchBar: {
 		flexDirection: "row",
 		alignItems: "center",
-		backgroundColor: "#fff",
-		margin: 20,
-		marginTop: -20,
+		backgroundColor: "#f3f4f6",
+		marginHorizontal: 20,
+		marginBottom: 20,
 		paddingHorizontal: 16,
 		paddingVertical: 14,
 		borderRadius: 12,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 2 },
-		shadowOpacity: 0.1,
-		shadowRadius: 8,
-		elevation: 3,
 	},
-	searchText: { marginLeft: 12, fontSize: 16, color: "#9ca3af", flex: 1 },
+	searchText: {
+		marginLeft: 12,
+		fontSize: 14,
+		color: "#9ca3af",
+		flex: 1,
+	},
+	sliderContainer: {
+		marginBottom: 20,
+		paddingHorizontal: 0,
+	},
+	slideItem: {
+		width: SCREEN_WIDTH,
+		paddingHorizontal: 20,
+	},
+	slideContent: {
+		width: "100%",
+		height: 200,
+		borderRadius: 16,
+		overflow: "hidden",
+	},
+	slideImage: {
+		width: "100%",
+		height: "100%",
+	},
+	sliderPlaceholder: {
+		height: 200,
+		marginHorizontal: 20,
+		marginBottom: 20,
+		justifyContent: "center",
+		alignItems: "center",
+		backgroundColor: "#f3f4f6",
+		borderRadius: 16,
+	},
 	dotsWrap: {
 		position: "absolute",
 		bottom: 12,
@@ -460,51 +492,80 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		paddingHorizontal: 12,
 	},
-	dot: { height: 8, borderRadius: 4 },
-	dotActive: { width: 16, backgroundColor: "rgba(255,255,255,0.95)" },
-	dotInactive: { width: 8, backgroundColor: "rgba(255,255,255,0.5)" },
-	categoriesSection: { padding: 20 },
-	sectionTitle: {
-		fontSize: 20,
-		fontWeight: "700",
-		color: "#1f2937",
-		marginBottom: 16,
+	dot: {
+		height: 8,
+		borderRadius: 4,
 	},
-	categoryCard: {
-		backgroundColor: "#fff",
+	dotActive: {
+		width: 16,
+		backgroundColor: "rgba(255,255,255,0.95)",
+	},
+	dotInactive: {
+		width: 8,
+		backgroundColor: "rgba(255,255,255,0.5)",
+	},
+	categoriesSection: {
+		paddingHorizontal: 20,
+		marginBottom: 24,
+	},
+	categoryGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		justifyContent: "space-between",
+	},
+	categoryGridItem: {
+		width: "31%",
+		aspectRatio: 1,
+		backgroundColor: "#ffffff",
 		borderRadius: 12,
-		borderLeftWidth: 4,
+		alignItems: "center",
+		justifyContent: "center",
+		marginBottom: 16,
 		shadowColor: "#000",
 		shadowOffset: { width: 0, height: 1 },
 		shadowOpacity: 0.05,
 		shadowRadius: 4,
 		elevation: 2,
 	},
-	categoryContent: { flexDirection: "row", alignItems: "center", padding: 16 },
-	iconContainer: {
+	categoryIconWrapper: {
 		width: 56,
 		height: 56,
-		borderRadius: 12,
+		borderRadius: 28,
+		backgroundColor: "#f3f4f6",
 		alignItems: "center",
 		justifyContent: "center",
-		marginRight: 16,
+		marginBottom: 8,
 	},
-	categoryInfo: { flex: 1 },
-	categoryTitle: {
-		fontSize: 16,
+	categoryEmoji: {
+		fontSize: 32,
+	},
+	categoryGridTitle: {
+		fontSize: 12,
 		fontWeight: "600",
 		color: "#1f2937",
-		marginBottom: 4,
+		textAlign: "center",
+		paddingHorizontal: 4,
 	},
-	categoryDescription: { fontSize: 14, color: "#6b7280" },
-	recentSection: { padding: 20 },
+	sectionTitle: {
+		fontSize: 20,
+		fontWeight: "700",
+		color: "#1f2937",
+		marginBottom: 16,
+	},
 	sectionHeader: {
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "space-between",
 		marginBottom: 16,
 	},
-	viewAllText: { fontSize: 14, color: "#6366f1", fontWeight: "600" },
+	viewAllText: {
+		fontSize: 14,
+		color: "#6366f1",
+		fontWeight: "600",
+	},
+	recentSection: {
+		paddingHorizontal: 20,
+	},
 	recentCard: {
 		backgroundColor: "#fff",
 		borderRadius: 12,
@@ -518,19 +579,28 @@ const styles = StyleSheet.create({
 		shadowRadius: 4,
 		elevation: 2,
 	},
-	recentInfo: { flex: 1 },
+	recentInfo: {
+		flex: 1,
+	},
 	recentTitle: {
 		fontSize: 16,
 		fontWeight: "600",
 		color: "#1f2937",
 		marginBottom: 4,
 	},
-	recentDate: { fontSize: 14, color: "#6b7280" },
+	recentDate: {
+		fontSize: 14,
+		color: "#6b7280",
+	},
 	rebookButton: {
 		backgroundColor: "#6366f1",
 		paddingHorizontal: 16,
 		paddingVertical: 8,
 		borderRadius: 8,
 	},
-	rebookText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+	rebookText: {
+		color: "#fff",
+		fontSize: 14,
+		fontWeight: "600",
+	},
 });
