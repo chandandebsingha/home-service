@@ -141,7 +141,7 @@ export async function adminVerifyProviderProfile(
 	token: string,
 	id: number
 ): Promise<ApiResponse<ProviderProfileDTO>> {
-	return apiPost(API.ENDPOINTS.ADMIN.PROVIDERS.VERIFY(id), {}, token);
+	return apiPatch(API.ENDPOINTS.ADMIN.PROVIDERS.VERIFY(id), {}, token);
 }
 
 // Auth types
@@ -181,6 +181,32 @@ export async function apiPost<T>(
 	try {
 		const res = await fetch(getApiUrl(endpoint), {
 			method: "POST",
+			headers: {
+				...API.DEFAULT_HEADERS,
+				...(token ? { Authorization: `Bearer ${token}` } : {}),
+			},
+			body: JSON.stringify(data),
+			cache: "no-store",
+		});
+		const json = await res.json();
+		if (!res.ok) {
+			return { success: false, error: json?.message || `HTTP ${res.status}` };
+		}
+		return { success: true, data: json?.data ?? json };
+	} catch (e: any) {
+		return { success: false, error: e?.message || "Network error" };
+	}
+}
+
+// PATCH helper
+export async function apiPatch<T>(
+	endpoint: string,
+	data: any,
+	token?: string
+): Promise<ApiResponse<T>> {
+	try {
+		const res = await fetch(getApiUrl(endpoint), {
+			method: "PATCH",
 			headers: {
 				...API.DEFAULT_HEADERS,
 				...(token ? { Authorization: `Bearer ${token}` } : {}),

@@ -38,26 +38,49 @@ import { useAuth } from "@/contexts/AuthContext";
 
 interface Partner {
 	id: number;
-	name: string;
+	name: string; // business name (fallbacks applied)
 	email: string;
 	phone?: string;
-	businessType?: string;
+	businessType?: string; // occupation name (short)
 	registrationDate?: string;
 	verified: boolean;
 	blocked: boolean;
 	documents: string[];
 	address?: string;
+	// Additional provider profile fields
+	userId: number;
+	userFullName?: string;
+	businessName?: string;
+	businessAddress?: string;
+	occupationName?: string;
+	occupationId?: number;
+	occupationDescription?: string;
+	experience?: string;
+	bio?: string;
+	skills?: string[] | null;
+	certifications?: string[] | null;
+	isActive: boolean;
+	updatedAt?: string;
 }
 
 const PartnerVerificationDashboard = () => {
 	const [partners, setPartners] = useState<Partner[]>([]);
 	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
 	const { token } = useAuth();
 
 	useEffect(() => {
 		const load = async () => {
-			if (!token) return;
 			setLoading(true);
+			setError(null);
+			if (!token) {
+				setPartners([]);
+				setLoading(false);
+				setError(
+					"Please sign in as an admin to view partner verification requests."
+				);
+				return;
+			}
 			const res = await adminListProviderProfiles(token);
 			if (res.success && res.data) {
 				const mapped: Partner[] = res.data.map((p: ProviderProfileDTO) => ({
@@ -71,8 +94,24 @@ const PartnerVerificationDashboard = () => {
 					blocked: false,
 					documents: [],
 					address: p.businessAddress || undefined,
+					// extras
+					userId: p.userId,
+					userFullName: p.user?.fullName || undefined,
+					businessName: p.businessName || undefined,
+					businessAddress: p.businessAddress || undefined,
+					occupationName: p.occupation?.name || undefined,
+					occupationId: p.occupationId || undefined,
+					occupationDescription: p.occupation?.description || undefined,
+					experience: p.experience || undefined,
+					bio: p.bio || undefined,
+					skills: (p.skills as any) || null,
+					certifications: (p.certifications as any) || null,
+					isActive: !!p.isActive,
+					updatedAt: p.updatedAt || undefined,
 				}));
 				setPartners(mapped);
+			} else {
+				setError(res.error || "Failed to load partner profiles");
 			}
 			setLoading(false);
 		};
@@ -165,6 +204,11 @@ const PartnerVerificationDashboard = () => {
 	return (
 		<div className="min-h-screen bg-background p-6">
 			<div className="max-w-7xl mx-auto">
+				{error && (
+					<div className="mb-4 p-3 rounded bg-red-50 text-red-700 border border-red-200">
+						{error}
+					</div>
+				)}
 				<div className="mb-8">
 					<h1 className="text-3xl font-bold text-foreground">
 						Partner Verification Dashboard
@@ -307,10 +351,12 @@ const PartnerVerificationDashboard = () => {
 							<div className="grid grid-cols-2 gap-4">
 								<div>
 									<label className="text-sm font-medium text-muted-foreground">
-										Partner Name
+										Business Name
 									</label>
 									<p className="text-lg font-medium mt-1">
-										{selectedPartner.name}
+										{selectedPartner.businessName ||
+											selectedPartner.name ||
+											"-"}
 									</p>
 								</div>
 								<div>
@@ -322,6 +368,14 @@ const PartnerVerificationDashboard = () => {
 							</div>
 
 							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Account Name
+									</label>
+									<p className="text-foreground mt-1">
+										{selectedPartner.userFullName || "-"}
+									</p>
+								</div>
 								<div>
 									<label className="text-sm font-medium text-muted-foreground">
 										Email
@@ -340,13 +394,69 @@ const PartnerVerificationDashboard = () => {
 								</div>
 							</div>
 
-							<div>
-								<label className="text-sm font-medium text-muted-foreground">
-									Business Type
-								</label>
-								<p className="text-foreground mt-1">
-									{selectedPartner.businessType}
-								</p>
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Business Type
+									</label>
+									<p className="text-foreground mt-1">
+										{selectedPartner.occupationName ||
+											selectedPartner.businessType ||
+											"-"}
+									</p>
+								</div>
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Experience
+									</label>
+									<p className="text-foreground mt-1">
+										{selectedPartner.experience || "-"}
+									</p>
+								</div>
+							</div>
+
+							{/* Additional profile/meta info */}
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Profile ID
+									</label>
+									<p className="text-foreground mt-1">{selectedPartner.id}</p>
+								</div>
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										User ID
+									</label>
+									<p className="text-foreground mt-1">
+										{selectedPartner.userId}
+									</p>
+								</div>
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Occupation ID
+									</label>
+									<p className="text-foreground mt-1">
+										{selectedPartner.occupationId ?? "-"}
+									</p>
+								</div>
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Active
+									</label>
+									<p className="text-foreground mt-1">
+										{selectedPartner.isActive ? "Yes" : "No"}
+									</p>
+								</div>
+								{selectedPartner.occupationDescription && (
+									<div className="col-span-2">
+										<label className="text-sm font-medium text-muted-foreground">
+											Occupation Description
+										</label>
+										<p className="text-foreground mt-1 whitespace-pre-wrap">
+											{selectedPartner.occupationDescription}
+										</p>
+									</div>
+								)}
 							</div>
 
 							<div>
@@ -354,7 +464,9 @@ const PartnerVerificationDashboard = () => {
 									Address
 								</label>
 								<p className="text-foreground mt-1">
-									{selectedPartner.address}
+									{selectedPartner.businessAddress ||
+										selectedPartner.address ||
+										"-"}
 								</p>
 							</div>
 
@@ -366,21 +478,68 @@ const PartnerVerificationDashboard = () => {
 									{selectedPartner.registrationDate}
 								</p>
 							</div>
+							{selectedPartner.updatedAt && (
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Last Updated
+									</label>
+									<p className="text-foreground mt-1">
+										{selectedPartner.updatedAt}
+									</p>
+								</div>
+							)}
 
-							<div>
-								<label className="text-sm font-medium text-muted-foreground">
-									Submitted Documents
-								</label>
-								<div className="mt-2 space-y-2">
-									{selectedPartner.documents.map((doc, idx) => (
-										<div
-											key={idx}
-											className="flex items-center p-2 bg-muted rounded"
-										>
-											<CheckCircle className="w-4 h-4 text-green-600 mr-2" />
-											<span className="text-foreground">{doc}</span>
-										</div>
-									))}
+							{selectedPartner.bio && (
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Bio
+									</label>
+									<p className="text-foreground mt-1 whitespace-pre-wrap">
+										{selectedPartner.bio}
+									</p>
+								</div>
+							)}
+
+							<div className="grid grid-cols-2 gap-4">
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Skills
+									</label>
+									<div className="mt-2 flex flex-wrap gap-2">
+										{selectedPartner.skills &&
+										selectedPartner.skills.length > 0 ? (
+											selectedPartner.skills.map((s, i) => (
+												<span
+													key={i}
+													className="px-2 py-1 text-xs rounded bg-muted"
+												>
+													{s}
+												</span>
+											))
+										) : (
+											<span className="text-sm text-muted-foreground">-</span>
+										)}
+									</div>
+								</div>
+								<div>
+									<label className="text-sm font-medium text-muted-foreground">
+										Certifications
+									</label>
+									<div className="mt-2 flex flex-wrap gap-2">
+										{selectedPartner.certifications &&
+										selectedPartner.certifications.length > 0 ? (
+											selectedPartner.certifications.map((c, i) => (
+												<span
+													key={i}
+													className="px-2 py-1 text-xs rounded bg-muted"
+												>
+													{c}
+												</span>
+											))
+										) : (
+											<span className="text-sm text-muted-foreground">-</span>
+										)}
+									</div>
 								</div>
 							</div>
 

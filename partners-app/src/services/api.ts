@@ -93,6 +93,8 @@ export interface CreateServiceRequest {
 	description?: string;
 	price: number;
 	serviceType?: string;
+	serviceTypeId?: number;
+	categoryId?: number;
 	durationMinutes?: number;
 	availability?: boolean;
 	timeSlots?: string;

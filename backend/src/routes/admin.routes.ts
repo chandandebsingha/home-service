@@ -25,4 +25,12 @@ router.patch(
 	ProviderProfileController.verify
 );
 
+// Backward-compatible: accept POST as well
+router.post(
+	"/provider-profiles/:id/verify",
+	authenticateToken,
+	authorizeAdmin,
+	ProviderProfileController.verify
+);
+
 export default router;

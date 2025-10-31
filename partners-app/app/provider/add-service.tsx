@@ -23,35 +23,45 @@ interface ServiceType {
 	updatedAt: string;
 }
 
+interface ServiceCategory {
+	id: number;
+	name: string;
+	description?: string;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
 export default function AddServiceScreen() {
-    const { isAuthenticated, accessToken } = useAuth();
-    const { id } = useLocalSearchParams<{ id?: string }>();
+	const { isAuthenticated, accessToken } = useAuth();
+	const { id } = useLocalSearchParams<{ id?: string }>();
 	const [form, setForm] = useState<CreateServiceRequest & { serviceTypeId?: number }>({
 		name: "",
 		price: 0,
 		availability: true,
 	});
+	const [categories, setCategories] = useState<ServiceCategory[]>([]);
+	const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 	const [serviceTypes, setServiceTypes] = useState<ServiceType[]>([]);
+	const [typesLoading, setTypesLoading] = useState(false);
+	const [categoryOpen, setCategoryOpen] = useState(false);
+	const [typeOpen, setTypeOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         const loadData = async () => {
             try {
                 setLoading(true);
-                
-                // Load service types
-                if (accessToken) {
-                    const serviceTypesRes = await fetch(getApiUrl('/services/meta/types'), {
-                        headers: {
-                            'Authorization': `Bearer ${accessToken}`,
-                            'Content-Type': 'application/json',
-                        },
-                    });
-                    const serviceTypesData = await serviceTypesRes.json();
-                    if (serviceTypesData.success) {
-                        setServiceTypes(serviceTypesData.data || []);
-                    }
-                }
+
+				// Load categories
+				try {
+					const catRes = await fetch(getApiUrl('/categories'));
+					const catData = await catRes.json();
+					if (catData?.success) {
+						setCategories(catData.data || []);
+					}
+				} catch (err) {
+					console.warn('Failed to load categories:', err);
+				}
 
                 // Load service data if editing
                 if (id) {
@@ -67,6 +77,12 @@ export default function AddServiceScreen() {
                             availability: res.data.availability,
                             timeSlots: res.data.timeSlots,
                         });
+
+						// If we have a category, select it and load its types
+						if (res.data.categoryId) {
+							setSelectedCategoryId(res.data.categoryId);
+							await loadTypesForCategory(res.data.categoryId);
+						}
                     }
                 }
             } catch (error) {
@@ -78,6 +94,26 @@ export default function AddServiceScreen() {
         loadData();
     }, [id, accessToken]);
 
+	const loadTypesForCategory = async (categoryId: number) => {
+		try {
+			setTypesLoading(true);
+			setServiceTypes([]);
+			const res = await fetch(getApiUrl(`/categories/${categoryId}/types`), {
+				headers: accessToken
+					? { Authorization: `Bearer ${accessToken}` }
+					: undefined,
+			});
+			const data = await res.json();
+			if (data?.success) {
+				setServiceTypes(data.data || []);
+			}
+		} catch (err) {
+			console.warn('Failed to load service types for category:', err);
+		} finally {
+			setTypesLoading(false);
+		}
+	};
+
 	if (!isAuthenticated) {
 		return (
 			<View style={styles.center}>
@@ -86,8 +122,10 @@ export default function AddServiceScreen() {
 		);
 	}
 
-	const update = (key: keyof CreateServiceRequest, value: any) =>
-		setForm((f) => ({ ...f, [key]: value }));
+	const update = (
+		key: keyof (CreateServiceRequest & { serviceTypeId?: number }),
+		value: any
+	) => setForm((f) => ({ ...f, [key]: value }));
 
 	const toNum = (v: string) => {
 		const n = Number(v);
@@ -105,7 +143,7 @@ export default function AddServiceScreen() {
                 return;
             }
 
-            const payload: CreateServiceRequest = {
+			const payload: CreateServiceRequest = {
                 name: form.name.trim(),
                 description: form.description?.trim() || undefined,
                 price: Number(form.price),
@@ -116,6 +154,7 @@ export default function AddServiceScreen() {
                     : undefined,
                 availability: form.availability,
                 timeSlots: form.timeSlots?.trim() || undefined,
+				categoryId: selectedCategoryId ?? undefined,
             };
 
             const res = id
@@ -140,6 +179,58 @@ export default function AddServiceScreen() {
 	return (
 		<ScrollView contentContainerStyle={styles.container}>
             <Text style={styles.title}>{id ? 'Edit Service' : 'Add Service'}</Text>
+
+			{/* Category selection */}
+			<Text style={styles.label}>Service Category *</Text>
+			<TouchableOpacity
+				style={[styles.input, styles.selector]}
+				onPress={() => {
+					setCategoryOpen((o) => !o);
+					if (!categoryOpen) setTypeOpen(false);
+				}}
+			>
+				<Text style={styles.selectorText}>
+					{selectedCategoryId
+						? categories.find((c) => c.id === selectedCategoryId)?.name || 'Select category'
+						: 'Select category'}
+				</Text>
+			</TouchableOpacity>
+			{categoryOpen && (
+				<View style={styles.dropdownContainer}>
+					{categories.length === 0 ? (
+						<View style={styles.dropdownItem}>
+							<Text style={styles.dropdownItemText}>No categories found</Text>
+						</View>
+					) : (
+						categories.map((cat) => (
+							<TouchableOpacity
+								key={cat.id}
+								style={[
+									styles.dropdownItem,
+									selectedCategoryId === cat.id && styles.dropdownItemSelected,
+								]}
+								onPress={async () => {
+									setSelectedCategoryId(cat.id);
+									// Reset selected service type when category changes
+									setForm((f) => ({ ...f, serviceTypeId: undefined }));
+									await loadTypesForCategory(cat.id);
+									setCategoryOpen(false);
+									setTypeOpen(true);
+								}}
+							>
+								<Text
+									style={[
+										styles.dropdownItemText,
+										selectedCategoryId === cat.id && styles.dropdownItemTextSelected,
+									]}
+								>
+									{cat.name}
+								</Text>
+							</TouchableOpacity>
+						))
+					)}
+				</View>
+			)}
 
 			<Text style={styles.label}>Name</Text>
 			<TextInput
@@ -168,25 +259,58 @@ export default function AddServiceScreen() {
 			/>
 
 			<Text style={styles.label}>Service Type *</Text>
-			<View style={styles.dropdownContainer}>
-				{serviceTypes.map((serviceType) => (
-					<TouchableOpacity
-						key={serviceType.id}
-						style={[
-							styles.dropdownItem,
-							form.serviceTypeId === serviceType.id && styles.dropdownItemSelected
-						]}
-						onPress={() => update("serviceTypeId", serviceType.id)}
-					>
-						<Text style={[
-							styles.dropdownItemText,
-							form.serviceTypeId === serviceType.id && styles.dropdownItemTextSelected
-						]}>
-							{serviceType.name}
-						</Text>
-					</TouchableOpacity>
-				))}
-			</View>
+			<TouchableOpacity
+				style={[styles.input, styles.selector, selectedCategoryId == null && styles.selectorDisabled]}
+				onPress={() => {
+					if (selectedCategoryId == null) return;
+					setTypeOpen((o) => !o);
+					if (!typeOpen) setCategoryOpen(false);
+				}}
+			>
+				<Text style={styles.selectorText}>
+					{selectedCategoryId == null
+						? 'Select a category first'
+						: form.serviceTypeId
+						? serviceTypes.find((t) => t.id === form.serviceTypeId)?.name || 'Select service type'
+						: 'Select service type'}
+				</Text>
+			</TouchableOpacity>
+			{typeOpen && selectedCategoryId != null && (
+				<View style={styles.dropdownContainer}>
+					{typesLoading ? (
+						<View style={styles.dropdownItem}>
+							<Text style={styles.dropdownItemText}>Loading types...</Text>
+						</View>
+					) : serviceTypes.length === 0 ? (
+						<View style={styles.dropdownItem}>
+							<Text style={styles.dropdownItemText}>No types for selected category</Text>
+						</View>
+					) : (
+						serviceTypes.map((serviceType) => (
+							<TouchableOpacity
+								key={serviceType.id}
+								style={[
+									styles.dropdownItem,
+									form.serviceTypeId === serviceType.id && styles.dropdownItemSelected,
+								]}
+								onPress={() => {
+									update("serviceTypeId", serviceType.id);
+									setTypeOpen(false);
+								}}
+							>
+								<Text
+									style={[
+										styles.dropdownItemText,
+										form.serviceTypeId === serviceType.id && styles.dropdownItemTextSelected,
+									]}
+								>
+									{serviceType.name}
+								</Text>
+							</TouchableOpacity>
+						))
+					)}
+				</View>
+			)}
 
 			<Text style={styles.label}>Duration (minutes)</Text>
 			<TextInput
@@ -244,6 +368,18 @@ const styles = StyleSheet.create({
 		borderWidth: 1,
 		borderColor: "#e5e7eb",
 		maxHeight: 200,
+	},
+	selector: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "space-between",
+	},
+	selectorText: {
+		color: "#374151",
+		fontSize: 16,
+	},
+	selectorDisabled: {
+		opacity: 0.6,
 	},
 	dropdownItem: {
 		paddingHorizontal: 12,
