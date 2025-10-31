@@ -61,7 +61,7 @@ router.put(
 router.post(
   '/profile',
   validateRequest([
-    { field: 'occupationId', validator: Validators.isNumber, message: 'occupationId must be a number' },
+    { field: 'occupationId', validator: Validators.isNumber, message: 'occupationId must be a number', optional: true },
     { field: 'businessName', validator: Validators.isString, message: 'businessName must be a string', optional: true },
     { field: 'businessAddress', validator: Validators.isString, message: 'businessAddress must be a string', optional: true },
     { field: 'phoneNumber', validator: Validators.isString, message: 'phoneNumber must be a string', optional: true },

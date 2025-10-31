@@ -12,34 +12,35 @@ import providerRoutes from "./routes/provider.routes";
 import partnerRoutes from "./routes/partner.routes";
 import occupationRoutes from "./routes/occupation.routes";
 import serviceTypesRoutes from "./routes/serviceTypes.routes";
+import publicRoutes from "./routes/public.routes";
 
 const app = express();
 
 // Middleware
 app.use(
-  cors({
-    origin: (origin, callback) => {
-      // Allow requests from Expo Go (no origin) and known dev origins
-      const allowed = [
-        "http://localhost:8081",
-        "http://localhost:8082",
-        "http://localhost:19006",
-        "http://localhost:3000",
-      ];
-      if (!origin) return callback(null, true); // mobile fetch often has no Origin
-      if (
-        allowed.includes(origin) ||
-        origin.startsWith("exp://") ||
-        /http:\/\/\d+\.\d+\.\d+\.\d+(:\d+)?/.test(origin)
-      ) {
-        return callback(null, true);
-      }
-      return callback(new Error("Not allowed by CORS"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
-  })
+	cors({
+		origin: (origin, callback) => {
+			// Allow requests from Expo Go (no origin) and known dev origins
+			const allowed = [
+				"http://localhost:8081",
+				"http://localhost:8082",
+				"http://localhost:19006",
+				"http://localhost:3000",
+			];
+			if (!origin) return callback(null, true); // mobile fetch often has no Origin
+			if (
+				allowed.includes(origin) ||
+				origin.startsWith("exp://") ||
+				/http:\/\/\d+\.\d+\.\d+\.\d+(:\d+)?/.test(origin)
+			) {
+				return callback(null, true);
+			}
+			return callback(new Error("Not allowed by CORS"));
+		},
+		credentials: true,
+		methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+		allowedHeaders: ["Content-Type", "Authorization", "Accept"],
+	})
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -58,24 +59,25 @@ app.use("/api/provider", providerRoutes);
 app.use("/api/partner", partnerRoutes);
 app.use("/api/occupations", occupationRoutes);
 app.use("/api/service-types", serviceTypesRoutes);
+app.use("/api/public", publicRoutes);
 
 // Health check
 app.get("/", (req, res) => {
-  res.json({
-    success: true,
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-  });
+	res.json({
+		success: true,
+		message: "Server is running",
+		timestamp: new Date().toISOString(),
+	});
 });
 
 // Also respond on /api so clients that probe the API base (e.g. GET /api/)
 // don't receive a 404 when checking connectivity.
 app.get("/api", (req, res) => {
-  res.json({
-    success: true,
-    message: "API is available",
-    timestamp: new Date().toISOString(),
-  });
+	res.json({
+		success: true,
+		message: "API is available",
+		timestamp: new Date().toISOString(),
+	});
 });
 
 // Error handling middleware (must be last)

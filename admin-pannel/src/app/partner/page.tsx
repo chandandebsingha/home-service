@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
 	CheckCircle,
 	XCircle,
@@ -29,71 +29,55 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	adminListProviderProfiles,
+	adminVerifyProviderProfile,
+	ProviderProfileDTO,
+} from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Partner {
 	id: number;
 	name: string;
 	email: string;
-	phone: string;
-	businessType: string;
-	registrationDate: string;
+	phone?: string;
+	businessType?: string;
+	registrationDate?: string;
 	verified: boolean;
 	blocked: boolean;
 	documents: string[];
-	address: string;
+	address?: string;
 }
 
 const PartnerVerificationDashboard = () => {
-	const [partners, setPartners] = useState<Partner[]>([
-		{
-			id: 1,
-			name: "Tech Solutions Inc",
-			email: "contact@techsolutions.com",
-			phone: "+1 234-567-8900",
-			businessType: "IT Services",
-			registrationDate: "2024-10-15",
-			verified: false,
-			blocked: false,
-			documents: ["Business License", "Tax ID", "Insurance"],
-			address: "123 Tech Street, Silicon Valley, CA",
-		},
-		{
-			id: 2,
-			name: "Green Energy Co",
-			email: "info@greenenergy.com",
-			phone: "+1 234-567-8901",
-			businessType: "Renewable Energy",
-			registrationDate: "2024-10-10",
-			verified: true,
-			blocked: false,
-			documents: ["Business License", "Tax ID", "ISO Certification"],
-			address: "456 Green Ave, Austin, TX",
-		},
-		{
-			id: 3,
-			name: "Digital Marketing Pro",
-			email: "hello@digitalmarketing.com",
-			phone: "+1 234-567-8902",
-			businessType: "Marketing",
-			registrationDate: "2024-10-20",
-			verified: false,
-			blocked: true,
-			documents: ["Business License", "Tax ID"],
-			address: "789 Market Blvd, New York, NY",
-		},
-		{
-			id: 4,
-			name: "CloudHost Systems",
-			email: "support@cloudhost.com",
-			phone: "+1 234-567-8903",
-			businessType: "Cloud Services",
-			registrationDate: "2024-10-08",
-			verified: true,
-			blocked: false,
-			documents: ["Business License", "Tax ID", "SOC 2 Compliance"],
-			address: "321 Cloud Drive, Seattle, WA",
-		},
-	]);
+	const [partners, setPartners] = useState<Partner[]>([]);
+	const [loading, setLoading] = useState(true);
+	const { token } = useAuth();
+
+	useEffect(() => {
+		const load = async () => {
+			if (!token) return;
+			setLoading(true);
+			const res = await adminListProviderProfiles(token);
+			if (res.success && res.data) {
+				const mapped: Partner[] = res.data.map((p: ProviderProfileDTO) => ({
+					id: p.id,
+					name: p.businessName || p.user?.fullName || `User ${p.userId}`,
+					email: p.user?.email || "",
+					phone: p.phoneNumber || "",
+					businessType: p.occupation?.name || undefined,
+					registrationDate: p.createdAt || undefined,
+					verified: !!p.isVerified,
+					blocked: false,
+					documents: [],
+					address: p.businessAddress || undefined,
+				}));
+				setPartners(mapped);
+			}
+			setLoading(false);
+		};
+		load();
+	}, [token]);
 
 	const [selectedPartner, setSelectedPartner] = useState<Partner | null>(null);
 	const [filter, setFilter] = useState<
@@ -107,13 +91,17 @@ const PartnerVerificationDashboard = () => {
 		blocked: partners.filter((p) => p.blocked).length,
 	};
 
-	const handleVerify = (id: number) => {
-		setPartners(
-			partners.map((p) =>
-				p.id === id ? { ...p, verified: true, blocked: false } : p
-			)
-		);
-		setSelectedPartner(null);
+	const handleVerify = async (id: number) => {
+		if (!token) return;
+		const res = await adminVerifyProviderProfile(token, id);
+		if (res.success) {
+			setPartners((prev) =>
+				prev.map((p) =>
+					p.id === id ? { ...p, verified: true, blocked: false } : p
+				)
+			);
+			setSelectedPartner(null);
+		}
 	};
 
 	const handleReject = (id: number) => {
@@ -283,7 +271,7 @@ const PartnerVerificationDashboard = () => {
 										{partner.businessType}
 									</TableCell>
 									<TableCell className="text-muted-foreground">
-										{partner.registrationDate}
+										{partner.registrationDate?.slice(0, 10) || "-"}
 									</TableCell>
 									<TableCell>{getStatusBadge(partner)}</TableCell>
 									<TableCell className="text-right">

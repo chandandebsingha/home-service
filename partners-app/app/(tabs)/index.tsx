@@ -242,62 +242,63 @@ export default function PartnerDashboard() {
 	);
 
 	const renderBookingCard = (booking: RecentBooking) => {
-	console.log("Rendering booking card:", booking);
+		console.log("Rendering booking card:", booking);
 
-	return (
-		<View key={booking.id} style={styles.bookingCard}>
-			<View style={styles.bookingHeader}>
-				<View style={styles.bookingInfo}>
-					<Text style={styles.bookingService}>{booking.serviceName}</Text>
-					<Text style={styles.bookingCustomer}>{booking.customerName}</Text>
-				</View>
-				<View
-					style={[
-						styles.statusBadge,
-						{ backgroundColor: `${getStatusColor(booking.status)}15` },
-					]}
-				>
-					<Text
+		return (
+			<View key={booking.id} style={styles.bookingCard}>
+				<View style={styles.bookingHeader}>
+					<View style={styles.bookingInfo}>
+						<Text style={styles.bookingService}>{booking.serviceName}</Text>
+						<Text style={styles.bookingCustomer}>{booking.customerName}</Text>
+					</View>
+					<View
 						style={[
-							styles.statusText,
-							{ color: getStatusColor(booking.status) },
+							styles.statusBadge,
+							{ backgroundColor: `${getStatusColor(booking.status)}15` },
 						]}
 					>
-						{booking.status.replace("-", " ")}
-					</Text>
+						<Text
+							style={[
+								styles.statusText,
+								{ color: getStatusColor(booking.status) },
+							]}
+						>
+							{booking.status.replace("-", " ")}
+						</Text>
+					</View>
 				</View>
-			</View>
-			<View style={styles.bookingDetails}>
-				<Text style={styles.bookingDate}>{booking.date}</Text>
-				<Text style={styles.bookingAmount}>₹ {booking.price}</Text>
-			</View>
 				<View style={styles.bookingDetails}>
-				<Text style={styles.bookingDate}>Slot- {booking.time}</Text>
-			</View>
-			{booking.status === "upcoming" && (
-				<View style={styles.bookingActions}>
-					<TouchableOpacity
-						style={[styles.actionButton, styles.completeButton]}
-						onPress={() =>
-							handleBookingAction(booking.id.toString(), "complete")
-						}
-					>
-						<MaterialIcons name="done" size={16} color="#fff" />
-						<Text style={styles.actionButtonText}>Mark Complete</Text>
-					</TouchableOpacity>
-					<TouchableOpacity
-						style={[styles.actionButton, styles.rejectButton]}
-						onPress={() => handleBookingAction(booking.id.toString(), "reject")}
-					>
-						<MaterialIcons name="close" size={16} color="#fff" />
-						<Text style={styles.actionButtonText}>Cancel</Text>
-					</TouchableOpacity>
+					<Text style={styles.bookingDate}>{booking.date}</Text>
+					<Text style={styles.bookingAmount}>₹ {booking.price}</Text>
 				</View>
-			)}
-		</View>
-	);
-};
-
+				<View style={styles.bookingDetails}>
+					<Text style={styles.bookingDate}>Slot- {booking.time}</Text>
+				</View>
+				{booking.status === "upcoming" && (
+					<View style={styles.bookingActions}>
+						<TouchableOpacity
+							style={[styles.actionButton, styles.completeButton]}
+							onPress={() =>
+								handleBookingAction(booking.id.toString(), "complete")
+							}
+						>
+							<MaterialIcons name="done" size={16} color="#fff" />
+							<Text style={styles.actionButtonText}>Mark Complete</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={[styles.actionButton, styles.rejectButton]}
+							onPress={() =>
+								handleBookingAction(booking.id.toString(), "reject")
+							}
+						>
+							<MaterialIcons name="close" size={16} color="#fff" />
+							<Text style={styles.actionButtonText}>Cancel</Text>
+						</TouchableOpacity>
+					</View>
+				)}
+			</View>
+		);
+	};
 
 	if (!isAuthenticated) {
 		return (

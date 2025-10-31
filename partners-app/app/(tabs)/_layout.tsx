@@ -1,13 +1,45 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { router, Tabs } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
-import { View, Image, TouchableOpacity, Text } from "react-native";
+import { View, Image, TouchableOpacity, Text, BackHandler, Alert } from "react-native";
 import { useAuth } from "@/src/contexts/AuthContext";
+import ProviderOnboardingModal from "@/src/components/ProviderOnboardingModal";
+import { apiService } from "@/src/services/api";
+import VerificationPendingOverlay from "@/src/components/VerificationPendingOverlay";
 
 export default function TabLayout() {
-	const { user, isAuthenticated, logout, isLoading } = useAuth();
-	return (
-		<Tabs
+	const { user, isAuthenticated, logout, isLoading, accessToken } = useAuth();
+		const [showOnboarding, setShowOnboarding] = useState(false);
+			const [pendingVerification, setPendingVerification] = useState(false);
+
+	useEffect(() => {
+			const run = async () => {
+				if (!isAuthenticated || !accessToken) return;
+				const res = await apiService.getProviderProfile(accessToken);
+				if (!res.success) {
+					setShowOnboarding(true);
+					setPendingVerification(false);
+				} else {
+					setShowOnboarding(false);
+					setPendingVerification(!res.data?.isVerified);
+				}
+			};
+		run();
+	}, [isAuthenticated, accessToken]);
+
+			// Block hardware back while onboarding required or verification pending
+		useEffect(() => {
+				if (!showOnboarding && !pendingVerification) return;
+			const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+				Alert.alert('Action required', 'Please complete your business profile to continue.');
+				return true;
+			});
+			return () => sub.remove();
+			}, [showOnboarding, pendingVerification]);
+
+	    return (
+	      <>
+			<Tabs
 			screenOptions={{
 				tabBarActiveTintColor: "#6366f1",
 				tabBarInactiveTintColor: "#9ca3af",
@@ -114,5 +146,13 @@ export default function TabLayout() {
 				}}
 			/>
 		</Tabs>
+      <ProviderOnboardingModal
+        visible={!!isAuthenticated && showOnboarding}
+        onSubmitted={() => setShowOnboarding(false)}
+      />
+					<VerificationPendingOverlay
+						visible={!!isAuthenticated && !showOnboarding && pendingVerification}
+					/>
+      </>
 	);
 }
