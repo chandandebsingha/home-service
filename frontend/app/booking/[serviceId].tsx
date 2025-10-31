@@ -171,7 +171,10 @@ export default function BookingScreen() {
 					"Please add your address in Manage Addresses.",
 					[
 						{ text: "Cancel", style: "cancel" },
-						{ text: "Open Addresses", onPress: () => router.push("/addresses") },
+						{
+							text: "Open Addresses",
+							onPress: () => router.push("/addresses"),
+						},
 					]
 				);
 				return;
@@ -183,9 +186,7 @@ export default function BookingScreen() {
 	const handleBooking = async () => {
 		try {
 			setSubmitting(true);
-			const selectedDateSlot = slots.find(
-				(slot) => slot.date === selectedDate
-			);
+			const selectedDateSlot = slots.find((slot) => slot.date === selectedDate);
 			const selectedTimeSlot = selectedDateSlot?.timeSlots.find(
 				(slot) => slot.id === selectedTime
 			);
@@ -346,7 +347,9 @@ export default function BookingScreen() {
 				<Text style={styles.summaryTitle}>Booking Summary</Text>
 				<View style={styles.summaryItem}>
 					<Text style={styles.summaryLabel}>Service:</Text>
-					<Text style={styles.summaryValue}>{service?.name || "Selected Service"}</Text>
+					<Text style={styles.summaryValue}>
+						{service?.name || "Selected Service"}
+					</Text>
 				</View>
 				<View style={styles.summaryItem}>
 					<Text style={styles.summaryLabel}>Duration:</Text>
@@ -359,9 +362,11 @@ export default function BookingScreen() {
 					<Text style={styles.summaryValue}>
 						{slots.find((s: DateSlot) => s.date === selectedDate)?.displayDate}{" "}
 						at{" "}
-						{slots
-							.find((s: DateSlot) => s.date === selectedDate)
-							?.timeSlots.find((t: TimeSlot) => t.id === selectedTime)?.time}
+						{
+							slots
+								.find((s: DateSlot) => s.date === selectedDate)
+								?.timeSlots.find((t: TimeSlot) => t.id === selectedTime)?.time
+						}
 					</Text>
 				</View>
 				<View style={[styles.summaryItem, styles.totalItem]}>
@@ -395,10 +400,10 @@ export default function BookingScreen() {
 	};
 
 	return (
-		<SafeAreaView style={styles.container} edges={['left','right','bottom']}>
+		<SafeAreaView style={styles.container} edges={["left", "right", "bottom"]}>
 			<KeyboardAvoidingView
 				style={styles.keyboardView}
-				behavior={'padding'}
+				behavior={"padding"}
 				keyboardVerticalOffset={Platform.select({ ios: 0, android: 0 })}
 			>
 				{renderStepIndicator()}

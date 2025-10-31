@@ -16,7 +16,7 @@ import {
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
-import apiService, { Category, Address } from "../../src/services/api";
+import apiService, { Category, Address, Booking } from "../../src/services/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // UI-friendly category shape used in this component
@@ -76,6 +76,12 @@ export default function HomeScreen({
 
 	// Display user's saved address in header
 	const [headerAddress, setHeaderAddress] = useState<string>("");
+
+	// Recent booking state
+	const [recentBooking, setRecentBooking] = useState<Booking | null>(null);
+	const [recentServiceName, setRecentServiceName] = useState<string>("");
+	const [recentLoading, setRecentLoading] = useState<boolean>(false);
+	const [recentError, setRecentError] = useState<string | null>(null);
 
 	useEffect(() => {
 		let mounted = true;
@@ -232,6 +238,86 @@ export default function HomeScreen({
 		]);
 	};
 
+	// Load most recent booking for the logged-in user
+	useEffect(() => {
+		let mounted = true;
+		const fetchRecent = async () => {
+			try {
+				if (!isAuthenticated) return; // avoid prompting unauthenticated users
+				setRecentLoading(true);
+				setRecentError(null);
+				const token = await AsyncStorage.getItem("access_token");
+				if (!token) return;
+				const res = await apiService.listMyBookings(token);
+				if (!mounted) return;
+				if (res.success && Array.isArray(res.data)) {
+					const bookings = res.data as Booking[];
+					if (!bookings.length) return;
+					// Prefer latest completed booking; fallback to latest any
+					const completed = bookings.filter((b) => b.status === "completed");
+					const list = completed.length ? completed : bookings;
+					const getTs = (b: Booking) => {
+						// Prefer createdAt if present, else date
+						const d = b.createdAt || b.date || "";
+						const parsed = new Date(d);
+						return isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+					};
+					const latest = list.reduce((p, c) => (getTs(c) > getTs(p) ? c : p));
+					setRecentBooking(latest);
+					// Fetch service name
+					const sRes = await apiService.getService(latest.serviceId);
+					if (!mounted) return;
+					if (sRes.success && sRes.data) {
+						setRecentServiceName((sRes.data as any)?.name || "");
+					}
+				} else {
+					setRecentError(res.error || "Failed to load recent bookings");
+				}
+			} catch (e: any) {
+				if (!mounted) return;
+				setRecentError(e?.message || "Failed to load recent bookings");
+			} finally {
+				if (mounted) setRecentLoading(false);
+			}
+		};
+		fetchRecent();
+		return () => {
+			mounted = false;
+		};
+	}, [isAuthenticated]);
+
+	const formatDisplayDate = (b?: Booking | null) => {
+		if (!b) return "";
+		const dStr = b.date || b.createdAt || "";
+		if (!dStr) return "";
+		const d = new Date(dStr);
+		if (isNaN(d.getTime())) return dStr;
+		return d.toLocaleDateString(undefined, {
+			month: "short",
+			day: "numeric",
+			year: "numeric",
+		});
+	};
+
+	const capitalize = (s?: string) =>
+		s ? s.charAt(0).toUpperCase() + s.slice(1) : "";
+
+	const handleRebookPress = () => {
+		if (!isAuthenticated) {
+			Alert.alert("Login Required", "Please sign in to book a service.", [
+				{ text: "Cancel", style: "cancel" },
+				{ text: "Sign In", onPress: () => router.push("/auth/login") },
+			]);
+			return;
+		}
+		if (recentBooking) {
+			router.push(`/booking/${recentBooking.serviceId}`);
+		} else {
+			// If no recent booking, navigate user to explore services
+			router.push("/search");
+		}
+	};
+
 	// Show loading screen while checking authentication
 	if (isLoading) {
 		return (
@@ -258,7 +344,11 @@ export default function HomeScreen({
 						activeOpacity={0.7}
 					>
 						<MaterialIcons name="location-on" size={20} color="#1f2937" />
-						<Text style={styles.locationText} numberOfLines={1} ellipsizeMode="tail">
+						<Text
+							style={styles.locationText}
+							numberOfLines={1}
+							ellipsizeMode="tail"
+						>
 							{headerAddress || "Set your address"}
 						</Text>
 					</TouchableOpacity>
@@ -290,7 +380,10 @@ export default function HomeScreen({
 				)}
 
 				{/* Search Bar */}
-				<TouchableOpacity style={styles.searchBar} onPress={() => router.push("/search")}>
+				<TouchableOpacity
+					style={styles.searchBar}
+					onPress={() => router.push("/search")}
+				>
 					<MaterialIcons name="search" size={20} color="#9ca3af" />
 					<Text style={styles.searchText}>
 						Search for services and packages
@@ -371,10 +464,31 @@ export default function HomeScreen({
 					</View>
 					<View style={styles.recentCard}>
 						<View style={styles.recentInfo}>
-							<Text style={styles.recentTitle}>House Cleaning</Text>
-							<Text style={styles.recentDate}>Completed on Dec 15, 2024</Text>
+							<Text style={styles.recentTitle}>
+								{recentLoading
+									? "Loading..."
+									: recentServiceName ||
+									  (recentBooking
+											? "Your last service"
+											: "No recent bookings yet")}
+							</Text>
+							<Text style={styles.recentDate}>
+								{recentLoading
+									? "Fetching details"
+									: recentBooking
+									? `${capitalize(recentBooking.status)} on ${formatDisplayDate(
+											recentBooking
+									  )}`
+									: recentError
+									? recentError
+									: ""}
+							</Text>
 						</View>
-						<TouchableOpacity style={styles.rebookButton}>
+						<TouchableOpacity
+							style={styles.rebookButton}
+							onPress={handleRebookPress}
+							disabled={recentLoading}
+						>
 							<Text style={styles.rebookText}>Rebook</Text>
 						</TouchableOpacity>
 					</View>
