@@ -63,7 +63,8 @@ export interface ProviderProfile {
 	userId: number;
 	occupationId?: number | null;
 	businessName?: string | null;
-	businessAddress?: string | null;
+	businessAddress?: string | null; // Legacy field
+	addressId?: number | null; // New field for relational address
 	phoneNumber?: string | null;
 	experience?: string | null;
 	skills?: string[] | null;
@@ -80,7 +81,8 @@ export interface ProviderProfile {
 export interface CreateProviderProfileRequest {
 	occupationId?: number;
 	businessName?: string;
-	businessAddress?: string;
+	businessAddress?: string; // Legacy field for backward compatibility
+	addressId?: number; // New field for relational address
 	phoneNumber?: string;
 	experience?: string;
 	skills?: string[];
@@ -120,6 +122,36 @@ export interface CreateBookingRequest {
 	address: string;
 	specialInstructions?: string;
 	price: number;
+}
+
+export interface Address {
+	id?: number;
+	userId?: number;
+	street: string;
+	apartment?: string;
+	landmark?: string;
+	city: string;
+	state: string;
+	pinCode: string;
+	country: string;
+	latitude?: number | string;
+	longitude?: number | string;
+	isDefault?: boolean;
+	createdAt?: string;
+	updatedAt?: string;
+}
+
+export interface CreateAddressRequest {
+	street: string;
+	apartment?: string;
+	landmark?: string;
+	city: string;
+	state: string;
+	pinCode: string;
+	country: string;
+	latitude?: number;
+	longitude?: number;
+	isDefault?: boolean;
 }
 
 // API Service Class
@@ -478,6 +510,50 @@ class ApiService {
 		});
 		if (!res.success) return res;
 		return { success: true, data: res.data?.data as Occupation[] };
+	}
+
+	// Address management
+	async createAddress(
+		token: string,
+		payload: CreateAddressRequest
+	): Promise<ApiResponse<Address>> {
+		const res = await this.request<any>("/addresses", {
+			method: "POST",
+			headers: { Authorization: `Bearer ${token}` },
+			body: JSON.stringify(payload),
+		});
+		if (!res.success) return res;
+		return { success: true, data: res.data?.data as Address };
+	}
+
+	async listMyAddresses(token: string): Promise<ApiResponse<Address[]>> {
+		const res = await this.request<any>("/addresses", {
+			method: "GET",
+			headers: { Authorization: `Bearer ${token}` },
+		});
+		if (!res.success) return res;
+		return { success: true, data: res.data?.data as Address[] };
+	}
+
+	async updateAddress(
+		token: string,
+		id: number,
+		payload: Partial<CreateAddressRequest>
+	): Promise<ApiResponse<Address>> {
+		const res = await this.request<any>(`/addresses/${id}`, {
+			method: "PUT",
+			headers: { Authorization: `Bearer ${token}` },
+			body: JSON.stringify(payload),
+		});
+		if (!res.success) return res;
+		return { success: true, data: res.data?.data as Address };
+	}
+
+	async deleteAddress(token: string, id: number): Promise<ApiResponse> {
+		return this.request(`/addresses/${id}`, {
+			method: "DELETE",
+			headers: { Authorization: `Bearer ${token}` },
+		});
 	}
 }
 

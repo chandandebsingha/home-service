@@ -39,6 +39,17 @@ const ProviderOnboardingModal: React.FC<Props> = ({ visible, onSubmitted }) => {
 		bio: "",
 	});
 
+	// Address form fields
+	const [street, setStreet] = useState("");
+	const [apartment, setApartment] = useState("");
+	const [landmark, setLandmark] = useState("");
+	const [city, setCity] = useState("");
+	const [stateVal, setStateVal] = useState("");
+	const [pinCode, setPinCode] = useState("");
+	const [country, setCountry] = useState("");
+	const [latitude, setLatitude] = useState("");
+	const [longitude, setLongitude] = useState("");
+
 	useEffect(() => {
 		if (visible) {
 			loadOccupations();
@@ -92,21 +103,81 @@ const ProviderOnboardingModal: React.FC<Props> = ({ visible, onSubmitted }) => {
 			Alert.alert("Missing field", "Please select an occupation.");
 			return;
 		}
-		setLoading(true);
-		const payload: any = {
-			...form,
-			skills: form.skills || [],
-			certifications: form.certifications || [],
-		};
-		if (!form.occupationId) delete payload.occupationId;
-		const res = await apiService.createProviderProfile(accessToken, payload);
-		setLoading(false);
-		if (!res.success) {
-			Alert.alert("Submit failed", res.error || "Could not submit details");
+
+		// Validate address fields
+		if (
+			!street.trim() ||
+			!city.trim() ||
+			!stateVal.trim() ||
+			!pinCode.trim() ||
+			!country.trim()
+		) {
+			Alert.alert(
+				"Missing address",
+				"Please fill required address fields: street, city, state, pin code and country."
+			);
 			return;
 		}
-		Alert.alert("Submitted", "Your details were submitted for verification.");
-		onSubmitted();
+
+		setLoading(true);
+
+		try {
+			// First, create the address
+			const addressPayload = {
+				street: street.trim(),
+				apartment: apartment.trim() || undefined,
+				landmark: landmark.trim() || undefined,
+				city: city.trim(),
+				state: stateVal.trim(),
+				pinCode: pinCode.trim(),
+				country: country.trim(),
+				latitude: latitude ? Number(latitude) : undefined,
+				longitude: longitude ? Number(longitude) : undefined,
+				isDefault: true, // Set as default address for the provider
+			};
+
+			const addressRes = await apiService.createAddress(
+				accessToken,
+				addressPayload
+			);
+
+			if (!addressRes.success || !addressRes.data) {
+				Alert.alert(
+					"Address creation failed",
+					addressRes.error || "Could not create address"
+				);
+				setLoading(false);
+				return;
+			}
+
+			const addressId = addressRes.data.id;
+
+			// Then, create the provider profile with addressId
+			const payload: any = {
+				...form,
+				addressId, // Include the address ID
+				skills: form.skills || [],
+				certifications: form.certifications || [],
+			};
+			// Remove old businessAddress field
+			delete payload.businessAddress;
+
+			if (!form.occupationId) delete payload.occupationId;
+
+			const res = await apiService.createProviderProfile(accessToken, payload);
+			setLoading(false);
+
+			if (!res.success) {
+				Alert.alert("Submit failed", res.error || "Could not submit details");
+				return;
+			}
+
+			Alert.alert("Submitted", "Your details were submitted for verification.");
+			onSubmitted();
+		} catch (error: any) {
+			setLoading(false);
+			Alert.alert("Error", error.message || "An error occurred");
+		}
 	};
 
 	return (
@@ -178,13 +249,95 @@ const ProviderOnboardingModal: React.FC<Props> = ({ visible, onSubmitted }) => {
 								onChangeText={(t) => updateField("businessName", t)}
 							/>
 
-							<Text style={styles.label}>Business address</Text>
+							{/* Business Address Section */}
+							<Text
+								style={[
+									styles.label,
+									{ marginTop: 16, fontSize: 15, fontWeight: "700" },
+								]}
+							>
+								Business Address
+							</Text>
+
+							<Text style={styles.label}>Street *</Text>
 							<TextInput
 								style={styles.input}
-								placeholder="Street, City"
-								value={form.businessAddress}
-								onChangeText={(t) => updateField("businessAddress", t)}
+								placeholder="Street / Address line"
+								value={street}
+								onChangeText={setStreet}
 							/>
+
+							<Text style={styles.label}>Apartment / Suite</Text>
+							<TextInput
+								style={styles.input}
+								placeholder="Apt, Suite, Building"
+								value={apartment}
+								onChangeText={setApartment}
+							/>
+
+							<Text style={styles.label}>Landmark</Text>
+							<TextInput
+								style={styles.input}
+								placeholder="Near ..."
+								value={landmark}
+								onChangeText={setLandmark}
+							/>
+
+							<Text style={styles.label}>City *</Text>
+							<TextInput
+								style={styles.input}
+								placeholder="City"
+								value={city}
+								onChangeText={setCity}
+							/>
+
+							<Text style={styles.label}>State *</Text>
+							<TextInput
+								style={styles.input}
+								placeholder="State"
+								value={stateVal}
+								onChangeText={setStateVal}
+							/>
+
+							<Text style={styles.label}>Pin Code *</Text>
+							<TextInput
+								style={styles.input}
+								placeholder="Pin code"
+								keyboardType="numeric"
+								value={pinCode}
+								onChangeText={setPinCode}
+							/>
+
+							<Text style={styles.label}>Country *</Text>
+							<TextInput
+								style={styles.input}
+								placeholder="Country"
+								value={country}
+								onChangeText={setCountry}
+							/>
+
+							<View style={{ flexDirection: "row", gap: 8 }}>
+								<View style={{ flex: 1 }}>
+									<Text style={styles.label}>Latitude</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="12.9716"
+										keyboardType="numeric"
+										value={latitude}
+										onChangeText={setLatitude}
+									/>
+								</View>
+								<View style={{ flex: 1 }}>
+									<Text style={styles.label}>Longitude</Text>
+									<TextInput
+										style={styles.input}
+										placeholder="77.5946"
+										keyboardType="numeric"
+										value={longitude}
+										onChangeText={setLongitude}
+									/>
+								</View>
+							</View>
 
 							<Text style={styles.label}>Phone number</Text>
 							<TextInput
