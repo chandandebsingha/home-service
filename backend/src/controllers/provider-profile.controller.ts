@@ -12,12 +12,10 @@ export class ProviderProfileController {
 				user.userId
 			);
 			if (existingProfile) {
-				res
-					.status(400)
-					.json({
-						success: false,
-						error: "Provider profile already exists for this user",
-					});
+				res.status(400).json({
+					success: false,
+					error: "Provider profile already exists for this user",
+				});
 				return;
 			}
 
@@ -26,6 +24,7 @@ export class ProviderProfileController {
 				occupationId: body.occupationId,
 				businessName: body.businessName,
 				businessAddress: body.businessAddress,
+				addressId: body.addressId, // New field for relational address
 				phoneNumber: body.phoneNumber,
 				experience: body.experience,
 				skills: body.skills ? JSON.stringify(body.skills) : null,
@@ -36,12 +35,10 @@ export class ProviderProfileController {
 			});
 			res.status(201).json({ success: true, data: created });
 		} catch (error: any) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					error: error.message || "Failed to create provider profile",
-				});
+			res.status(500).json({
+				success: false,
+				error: error.message || "Failed to create provider profile",
+			});
 		}
 	}
 
@@ -57,12 +54,10 @@ export class ProviderProfileController {
 			}
 			res.status(200).json({ success: true, data: profile });
 		} catch (error: any) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					error: error.message || "Failed to fetch provider profile",
-				});
+			res.status(500).json({
+				success: false,
+				error: error.message || "Failed to fetch provider profile",
+			});
 		}
 	}
 
@@ -75,6 +70,7 @@ export class ProviderProfileController {
 				occupationId: body.occupationId,
 				businessName: body.businessName,
 				businessAddress: body.businessAddress,
+				addressId: body.addressId, // New field for relational address
 				phoneNumber: body.phoneNumber,
 				experience: body.experience,
 				skills: body.skills ? JSON.stringify(body.skills) : null,
@@ -85,12 +81,10 @@ export class ProviderProfileController {
 			});
 			res.status(200).json({ success: true, data: updated });
 		} catch (error: any) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					error: error.message || "Failed to update provider profile",
-				});
+			res.status(500).json({
+				success: false,
+				error: error.message || "Failed to update provider profile",
+			});
 		}
 	}
 
@@ -99,12 +93,10 @@ export class ProviderProfileController {
 			const profiles = await ProviderProfileService.getAll();
 			res.status(200).json({ success: true, data: profiles });
 		} catch (error: any) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					error: error.message || "Failed to fetch provider profiles",
-				});
+			res.status(500).json({
+				success: false,
+				error: error.message || "Failed to fetch provider profiles",
+			});
 		}
 	}
 
@@ -119,12 +111,10 @@ export class ProviderProfileController {
 			const updated = await ProviderProfileService.verifyAndPromote(profileId);
 			res.status(200).json({ success: true, data: updated });
 		} catch (error: any) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					error: error.message || "Failed to verify provider",
-				});
+			res.status(500).json({
+				success: false,
+				error: error.message || "Failed to verify provider",
+			});
 		}
 	}
 }
