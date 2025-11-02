@@ -32,22 +32,14 @@ import { AuthGuard } from "@/components/auth-guard";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const HOME_SERVICE_CATEGORIES = [
-  "Home Maintenance & Repair",
-  "Cleaning & Pest Control",
-  "Home Interior & Renovation",
-  "Appliance Services",
-  "Beauty & Personal Care",
-  "Home Chef & Catering",
-  "Laundry & Fabric Care",
-  "Child & Elderly Care",
-  "Home Security & Smart Devices",
-  "Vehicle Care",
-  "Gardening & Outdoor",
-  "Moving & Storage",
-  "IT & Smart Support",
-  "Home Utility Services",
-  "Tutoring & Home Classes",
-  "Other",
+  "Cleaning & Maintenance",
+  "Repairs & Technical Services",
+  "Outdoor & Gardening",
+  "Home Improvement & Renovation",
+  "Personal & Beauty Services",
+  "Care & Assistance",
+  "Food & Household Support",
+  "Home Office / Digital Setup",
 ];
 
 

@@ -59,6 +59,27 @@ export class SupabaseService {
     return data;
   }
 
+  static async findUserByEmail(email: string) {
+    const supabase = await this.getClient();
+    if (!supabase.auth?.admin?.listUsers) {
+      throw new Error('Supabase admin API not available');
+    }
+
+    let page = 1;
+    const perPage = 1000;
+    const maxPages = 10; // safety cap
+
+    while (page <= maxPages) {
+      const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
+      if (error) throw error;
+      const found = data?.users?.find((u: any) => (u?.email || '').toLowerCase() === email.toLowerCase());
+      if (found) return found;
+      if (!data || !Array.isArray(data.users) || data.users.length < perPage) break; // no more pages
+      page += 1;
+    }
+    return null;
+  }
+
   static async adminCreateUser(email: string, password: string, metadata?: any) {
     const supabase = await this.getClient();
     if (!supabase.auth?.admin?.createUser) {
@@ -71,7 +92,16 @@ export class SupabaseService {
       user_metadata: metadata,
     });
 
-    if (error) throw error;
+    if (error) {
+      // If the user already exists, fetch and return it instead of failing
+      const code = (error as any)?.code || (error as any)?.error?.code;
+      const status = (error as any)?.status;
+      if (status === 422 && code === 'email_exists') {
+        const existing = await this.findUserByEmail(email);
+        if (existing) return existing;
+      }
+      throw error;
+    }
     return data.user;
   }
 }

@@ -85,6 +85,20 @@ npm run build
 npm start
 ```
 
+### Seed an Admin User
+
+The seeding script creates an admin account using environment variables and is idempotent (safe to run multiple times). If the email already exists in Supabase, it will reuse that user and only insert the local record.
+
+```bash
+npm run seed:admin
+```
+
+Configurable via:
+
+- `ADMIN_EMAIL` (default: `admin@example.com`)
+- `ADMIN_PASSWORD` (default: `Admin@123456`)
+- `ADMIN_NAME` (default: `Administrator`)
+
 ## 📚 API Endpoints
 
 ### Authentication

@@ -36,6 +36,12 @@ export default function VerifyOtpScreen() {
 	const [isResending, setIsResending] = useState(false);
 	const inputRef = useRef<TextInput>(null);
 
+	// Ensure the hidden input focuses on mount to trigger the keyboard reliably in Expo Go
+	useEffect(() => {
+		const t = setTimeout(() => inputRef.current?.focus(), 250);
+		return () => clearTimeout(t);
+	}, []);
+
 	useEffect(() => {
 		if (email) {
 			setResendTimer(RESEND_INTERVAL_SECONDS);
@@ -120,7 +126,7 @@ export default function VerifyOtpScreen() {
 				behavior={Platform.OS === "ios" ? "padding" : "height"}
 				style={styles.flex}
 			>
-				<ScrollView contentContainerStyle={styles.scrollContent}>
+				<ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps={'handled'}>
 					<View style={styles.illustrationContainer}>
 						<View style={styles.illustrationBubble}>
 							<Text style={styles.illustrationEmoji}>✉️</Text>
@@ -135,7 +141,12 @@ export default function VerifyOtpScreen() {
 
 					<View style={styles.otpInputWrapper}>
 						<Pressable
-							onPress={() => inputRef.current?.focus()}
+							accessible
+							accessibilityLabel={'OTP input'}
+							onPress={() => {
+								// Small delay can help ensure keyboard shows on some Android devices
+								setTimeout(() => inputRef.current?.focus(), 50);
+							}}
 							style={styles.otpBoxes}
 						>
 							{Array.from({ length: OTP_LENGTH }).map((_, index) => {
@@ -155,13 +166,18 @@ export default function VerifyOtpScreen() {
 							ref={inputRef}
 							value={otp}
 							onChangeText={(value) =>
-								setOtp(value.replace(/[^0-9]/g, "").slice(0, OTP_LENGTH))
+								setOtp(value.replace(/[^0-9]/g, '').slice(0, OTP_LENGTH))
 							}
-							keyboardType="number-pad"
+							keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
 							returnKeyType="done"
 							style={styles.hiddenInput}
 							maxLength={OTP_LENGTH}
 							autoFocus
+							showSoftInputOnFocus={true}
+							caretHidden={false}
+							autoCorrect={false}
+							underlineColorAndroid="transparent"
+							textContentType={Platform.OS === 'ios' ? 'oneTimeCode' : 'none'}
 						/>
 					</View>
 
