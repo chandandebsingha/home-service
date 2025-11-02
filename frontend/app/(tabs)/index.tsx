@@ -180,7 +180,6 @@ export default function HomeScreen({
 		apiService
 			.listCategories()
 			.then((res) => {
-				console.debug("listCategories response", res);
 				if (!mounted) return;
 				if (res.success && Array.isArray(res.data)) {
 					// Map backend category shape to UI-friendly fields
