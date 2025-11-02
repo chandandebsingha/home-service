@@ -15,6 +15,13 @@
       "when": 1761994519902,
       "tag": "0001_chunky_nehzno",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762075524658,
+      "tag": "0002_last_lord_hawal",
+      "breakpoints": true
     }
   ]
 }

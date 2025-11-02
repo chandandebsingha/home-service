@@ -28,6 +28,10 @@ export default function RootLayout() {
 					name="auth/register"
 					options={{ title: "Sign Up", headerShown: false }}
 				/>
+				<Stack.Screen
+					name="auth/verify-otp"
+					options={{ title: "Verify Email", headerShown: false }}
+				/>
 				<Stack.Screen name="category/[id]" options={{ title: "Services" }} />
 				<Stack.Screen
 					name="provider/[id]"

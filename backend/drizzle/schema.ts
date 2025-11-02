@@ -8,6 +8,7 @@ import {
 	uniqueIndex,
 	pgEnum,
 	numeric,
+	index,
 } from "drizzle-orm/pg-core";
 export const roleEnum = pgEnum("role", ["user", "admin", "partner"]);
 // Users table
@@ -149,6 +150,26 @@ export const bookings = pgTable("bookings", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const emailVerificationTokens = pgTable(
+	"email_verification_tokens",
+	{
+		id: serial("id").primaryKey(),
+		userId: integer("user_id")
+			.references(() => users.id, { onDelete: "cascade" })
+			.notNull(),
+		email: text("email").notNull(),
+		otpHash: text("otp_hash").notNull(),
+		expiresAt: timestamp("expires_at").notNull(),
+		attempts: integer("attempts").default(0).notNull(),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => ({
+		userIdIdx: index("email_verification_tokens_user_id_idx").on(table.userId),
+		emailIdx: index("email_verification_tokens_email_idx").on(table.email),
+	})
+);
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -167,3 +188,5 @@ export type NewOccupation = typeof occupations.$inferInsert;
 export type ProviderProfile = typeof providerProfiles.$inferSelect;
 export type NewProviderProfile = typeof providerProfiles.$inferInsert;
 export type Address = typeof address.$inferSelect;
+export type EmailVerificationToken =
+	typeof emailVerificationTokens.$inferSelect;
