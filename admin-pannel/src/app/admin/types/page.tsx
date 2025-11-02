@@ -18,118 +18,58 @@ import { AuthGuard } from "@/components/auth-guard"
 
 
 const EXPECTED_SERVICE_TYPES = [
-  // 🧰 Home Maintenance & Repair
-  "Electrician Services",
-  "Plumber Services",
-  "Carpenter Services",
-  "Painter Services",
-  "Masonry & Construction Work",
-  "Handyman",
-  "AC & Refrigerator Repair",
-  "RO & Water Purifier Repair",
-
-  // 🧹 Cleaning & Pest Control
-  "Home Deep Cleaning",
-  "Kitchen Cleaning",
-  "Bathroom Cleaning",
-  "Sofa & Carpet Cleaning",
-  "Water Tank Cleaning",
-  "Car Cleaning",
+  // 🧹 Cleaning & Maintenance
+  "Home Cleaning",
+  "Appliance Cleaning",
   "Pest Control",
 
-  // 🪑 Home Interior & Renovation
-  "Interior Design Consultation",
-  "Modular Kitchen Design",
-  "False Ceiling & Lighting",
-  "Flooring & Tiling",
-  "Furniture Design & Customization",
-  "Bathroom Renovation",
-  "Painting & Wallpapering",
+  // ⚡ Electrical Services
+  "Installation",
+  "Repair",
+  "Appliance Support",
 
-  // 🧺 Appliance Services
-  "AC Installation/Repair",
-  "Washing Machine Repair",
-  "Refrigerator Repair",
-  "Microwave/Oven Repair",
-  "TV Repair",
-  "Geyser/Water Heater Repair",
-  "Computer/Laptop Repair",
+  // 🚿 Plumbing Services
+  "Repair & Maintenance",
+  "Installation",
 
-  // 💇‍♀️ Beauty & Personal Care
-  "Salon at Home",
-  "Spa & Massage at Home",
-  "Makeup Artists",
-  "Mehndi Artists",
-  "Grooming Services for Men",
-  "Bridal Packages",
+  // 🛠️ Repairs & Technical Services
+  "Appliance Repair",
+  "Computer & Mobile",
+  "Internet & Router Setup",
 
-  // 🧑‍🍳 Home Chef & Catering
-  "Personal Chef",
-  "Small Event Catering",
-  "Tiffin Services",
-  "Home Baker",
-  "Party Snacks & Beverages",
-
-  // 🧺 Laundry & Fabric Care
-  "Laundry Pickup & Delivery",
-  "Dry Cleaning",
-  "Shoe Cleaning",
-  "Curtain & Carpet Cleaning",
-  "Ironing & Folding Services",
-
-  // 🧒 Child & Elderly Care
-  "Babysitter/Nanny",
-  "Elderly Caregiver",
-  "Nurse at Home",
-  "Physiotherapist at Home",
-
-  // 🏡 Home Security & Smart Devices
-  "CCTV Installation",
-  "Smart Doorbell Setup",
-  "Biometric Lock Installation",
-  "Security Alarm Systems",
-  "Home Automation",
-
-  // 🚗 Vehicle Care
-  "Car Washing & Detailing",
-  "Bike Servicing",
-  "Car Denting & Painting",
-  "Car AC & Battery Check",
-  "Doorstep Mechanic",
-
-  // 🌿 Gardening & Outdoor
+  // 🌿 Outdoor & Gardening
   "Garden Maintenance",
-  "Landscaping",
-  "Lawn Mowing",
-  "Plant Care & Pest Control",
-  "Vertical Garden Setup",
+  "Outdoor Cleaning",
 
-  // 📦 Moving & Storage
+  // 🧱 Home Improvement & Renovation
+  "Painting",
+  "Carpentry",
+  "Masonry & Civil Work",
+
+  // 💇‍♀️ Personal & Beauty Services
+  "Salon at Home",
+  "Massage & Spa",
+  "Makeup & Grooming",
+
+  // ❤️ Care & Assistance
+  "Elder Care",
+  "Child Care",
+  "Pet Care",
+
+  // 🍽️ Food & Household Support
+  "Cooking",
+  "Laundry",
+  "House Help",
+
+  // 💻 Home Office / Digital Setup
+  "Device Setup",
+  "Smart Home",
+
+  // 🚚 Moving & Logistics
+  "Shifting Services",
   "Packers & Movers",
-  "Local Shifting",
-  "Storage & Warehousing",
-  "Furniture Assembly/Disassembly",
-  "Vehicle Transport",
-
-  // 💻 IT & Smart Support
-  "Computer Repair",
-  "WiFi & Router Setup",
-  "CCTV & IoT Device Configuration",
-  "Printer Setup & Repair",
-
-  // 🧾 Home Utility Services
-  "Gas Pipeline Connection",
-  "Solar Panel Installation",
-  "Water Tank Installation",
-  "Borewell & Motor Pump Service",
-
-  // 🧑‍🏫 Tutoring & Home Classes
-  "School Tuition (K-12)",
-  "Competitive Exam Coaching",
-  "Music & Dance Classes",
-  "Fitness & Yoga Training",
-  "Art & Craft Classes",
 ];
+
 
 
 interface ServiceType {
