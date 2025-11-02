@@ -26,6 +26,7 @@ export default function RootLayout() {
         <Stack.Screen name="provider/add-service" options={{ title: 'Add Service' }} />
         <Stack.Screen name="booking/[serviceId]" options={{ title: 'Book Service' }} />
         <Stack.Screen name="booking/confirmation" options={{ title: 'Booking Confirmed' }} />
+        <Stack.Screen name="bookings/[id]" options={{ title: 'Booking Details' }} />
       </Stack>
     </AuthProvider>
   );

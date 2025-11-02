@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { router } from "expo-router";
+import { Link, router } from "expo-router";
 import { apiService, Booking as ApiBooking } from "@/src/services/api";
 
 type Booking = ApiBooking;
@@ -156,14 +156,24 @@ export default function PartnerBookingsScreen() {
 					<Text style={styles.serviceName}>{getServiceTitle(booking)}</Text>
 					<Text style={styles.bookingMeta}>Ref #{booking.id}</Text>
 				</View>
-				<View style={[styles.statusBadge]}>
-					<View
-						style={[
-							styles.statusDot,
-							{ backgroundColor: getStatusColor(booking.status) },
-						]}
-					/>
-					<Text style={styles.statusText}>{formatStatus(booking.status)}</Text>
+				<View style={styles.headerActions}>
+					<View style={styles.statusBadge}>
+						<View
+							style={[
+								styles.statusDot,
+								{ backgroundColor: getStatusColor(booking.status) },
+							]}
+						/>
+						<Text style={styles.statusText}>{formatStatus(booking.status)}</Text>
+					</View>
+					<Link
+						href={`/bookings/${booking.id}` as any}
+						asChild
+					>
+						<TouchableOpacity style={styles.viewButton} activeOpacity={0.85}>
+							<Text style={styles.viewButtonText}>View</Text>
+						</TouchableOpacity>
+					</Link>
 				</View>
 			</View>
 
@@ -385,6 +395,10 @@ const styles = StyleSheet.create({
 	bookingInfo: {
 		flex: 1,
 	},
+	headerActions: {
+		flexDirection: "row",
+		alignItems: "center",
+	},
 	serviceName: {
 		fontSize: 18,
 		fontWeight: "600",
@@ -419,6 +433,25 @@ const styles = StyleSheet.create({
 		textTransform: "capitalize",
 		letterSpacing: 0.2,
 		color: "#475569",
+	},
+	viewButton: {
+		marginLeft: 12,
+		paddingHorizontal: 16,
+		paddingVertical: 8,
+		borderRadius: 999,
+		backgroundColor: "#4338ca",
+		shadowColor: "#312e81",
+		shadowOffset: { width: 0, height: 1 },
+		shadowOpacity: 0.12,
+		shadowRadius: 3,
+		elevation: 2,
+	},
+	viewButtonText: {
+		color: "#f8fafc",
+		fontSize: 13,
+		fontWeight: "600",
+		letterSpacing: 0.3,
+		textTransform: "uppercase",
 	},
 	bookingBody: {
 		marginBottom: 18,
