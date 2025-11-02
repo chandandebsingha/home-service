@@ -629,16 +629,14 @@ const styles = StyleSheet.create({
 	categoryGridItem: {
 		width: "31%",
 		aspectRatio: 1,
-		backgroundColor: "#ffffff",
-		borderRadius: 12,
 		alignItems: "center",
 		justifyContent: "center",
 		marginBottom: 16,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.05,
-		shadowRadius: 4,
-		elevation: 2,
+		// removed card look
+		backgroundColor: "transparent",
+		borderRadius: 0,
+		shadowColor: "transparent",
+		elevation: 0,
 	},
 	categoryIconWrapper: {
 		width: 56,

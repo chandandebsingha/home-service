@@ -56,14 +56,17 @@ backend/
 
 1. Clone the repository
 2. Install dependencies:
+
    ```bash
    npm install
    ```
 
 3. Set up environment variables:
+
    ```bash
    cp .env.example .env
    ```
+
    Fill in your environment variables in `.env`
 
 4. Set up the database:
@@ -75,11 +78,13 @@ backend/
 ## 🏃‍♂️ Running the Application
 
 ### Development
+
 ```bash
 npm run dev
 ```
 
 ### Production
+
 ```bash
 npm run build
 npm start
@@ -102,12 +107,14 @@ Configurable via:
 ## 📚 API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - User registration (email, password, fullName)
 - `POST /api/auth/login` - User login (email, password)
 - `POST /api/auth/logout` - User logout (protected)
 - `GET /api/auth/profile` - Get user profile (protected)
 
 ### Health Check
+
 - `GET /health` - Server health check
 
 ## 🔧 Available Scripts

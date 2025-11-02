@@ -29,19 +29,25 @@ import { useAuth } from "@/contexts/AuthContext";
 import { apiGet, apiPost, getApiUrl } from "@/lib/api";
 import { AuthGuard } from "@/components/auth-guard";
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 
 const HOME_SERVICE_CATEGORIES = [
-  "Cleaning & Maintenance",
-  "Repairs & Technical Services",
-  "Outdoor & Gardening",
-  "Home Improvement & Renovation",
-  "Personal & Beauty Services",
-  "Care & Assistance",
-  "Food & Household Support",
-  "Home Office / Digital Setup",
+	"Cleaning & Maintenance",
+	"Repairs & Technical Services",
+	"Outdoor & Gardening",
+	"Home Improvement & Renovation",
+	"Personal & Beauty Services",
+	"Care & Assistance",
+	"Food & Household Support",
+	"Home Office / Digital Setup",
+	"Moving & Logistics",
 ];
-
 
 interface Category {
 	id: number;
@@ -65,6 +71,7 @@ export default function CategoriesPage() {
 		emoji: "",
 	});
 	const [emojiPickerOpen, setEmojiPickerOpen] = useState(false);
+	const [viewMode, setViewMode] = useState<"grid" | "table">("grid");
 
 	const EMOJI_OPTIONS = [
 		"🛠️",
@@ -202,8 +209,24 @@ export default function CategoriesPage() {
 						</AlertDescription>
 					</Alert>
 				)}
-				<div className="flex justify-between items-center">
+				<div className="flex justify-between items-center flex-wrap gap-3">
 					<h1 className="text-3xl font-bold">Categories Management</h1>
+					<div className="flex items-center gap-2 ml-auto">
+						<Button
+							variant={viewMode === "grid" ? "default" : "outline"}
+							size="sm"
+							onClick={() => setViewMode("grid")}
+						>
+							Grid
+						</Button>
+						<Button
+							variant={viewMode === "table" ? "default" : "outline"}
+							size="sm"
+							onClick={() => setViewMode("table")}
+						>
+							Table
+						</Button>
+					</div>
 					<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
 						<DialogTrigger asChild>
 							<Button
@@ -230,52 +253,56 @@ export default function CategoriesPage() {
 								)} */}
 
 								<div className="space-y-2">
-  <Label htmlFor="name">Category Name</Label>
+									<Label htmlFor="name">Category Name</Label>
 
-  <Select
-    value={
-      HOME_SERVICE_CATEGORIES.includes(formData.name)
-        ? formData.name
-        : "Other"
-    }
-    onValueChange={(value) => {
-      if (value === "Other") {
-        setFormData((prev) => ({ ...prev, name: "" }));
-      } else {
-        setFormData((prev) => ({ ...prev, name: value }));
-      }
-    }}
-  >
-    <SelectTrigger className="w-full">
-      <SelectValue placeholder="Select a category" />
-    </SelectTrigger>
-    <SelectContent>
-      {HOME_SERVICE_CATEGORIES.map((cat) => (
-        <SelectItem key={cat} value={cat}>
-          {cat}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
+									<Select
+										value={
+											HOME_SERVICE_CATEGORIES.includes(formData.name)
+												? formData.name
+												: "Other"
+										}
+										onValueChange={(value) => {
+											if (value === "Other") {
+												setFormData((prev) => ({ ...prev, name: "" }));
+											} else {
+												setFormData((prev) => ({ ...prev, name: value }));
+											}
+										}}
+									>
+										<SelectTrigger className="w-full">
+											<SelectValue placeholder="Select a category" />
+										</SelectTrigger>
+										<SelectContent>
+											{HOME_SERVICE_CATEGORIES.map((cat) => (
+												<SelectItem key={cat} value={cat}>
+													{cat}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
 
-  {/* Show input box if 'Other' is selected */}
-  {(!HOME_SERVICE_CATEGORIES.includes(formData.name) ||
-    formData.name === "") && (
-    <div className="mt-3 space-y-2">
-      <Label htmlFor="customCategory">Enter Custom Category</Label>
-      <Input
-        id="customCategory"
-        value={formData.name}
-        onChange={(e) =>
-          setFormData((prev) => ({ ...prev, name: e.target.value }))
-        }
-        placeholder="e.g., Pet Grooming, Handyman Services"
-        required
-      />
-    </div>
-  )}
-</div>
-
+									{/* Show input box if 'Other' is selected */}
+									{(!HOME_SERVICE_CATEGORIES.includes(formData.name) ||
+										formData.name === "") && (
+										<div className="mt-3 space-y-2">
+											<Label htmlFor="customCategory">
+												Enter Custom Category
+											</Label>
+											<Input
+												id="customCategory"
+												value={formData.name}
+												onChange={(e) =>
+													setFormData((prev) => ({
+														...prev,
+														name: e.target.value,
+													}))
+												}
+												placeholder="e.g., Pet Grooming, Handyman Services"
+												required
+											/>
+										</div>
+									)}
+								</div>
 
 								<div className="space-y-2">
 									<Label htmlFor="description">Description</Label>
@@ -360,6 +387,27 @@ export default function CategoriesPage() {
 					<CardContent>
 						{loading ? (
 							<div className="text-center py-4">Loading categories...</div>
+						) : viewMode === "grid" ? (
+							<div className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-4 md:gap-6">
+								{categories.map((category) => (
+									<button
+										key={category.id}
+										onClick={() => handleEdit(category)}
+										className="group flex flex-col items-center justify-start gap-2 p-3 rounded-xl hover:bg-slate-50 transition-colors w-full"
+									>
+										<div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-slate-100 flex items-center justify-center shadow-inner ring-1 ring-slate-200">
+											<span className="text-2xl md:text-3xl text-slate-700">
+												{category.emoji || "🧩"}
+											</span>
+										</div>
+										<div className="w-full text-center max-w-[120px] md:max-w-[140px]">
+											<div className="text-sm text-slate-800 font-medium truncate">
+												{category.name}
+											</div>
+										</div>
+									</button>
+								))}
+							</div>
 						) : (
 							<Table>
 								<TableHeader>

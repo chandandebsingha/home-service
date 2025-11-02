@@ -126,7 +126,10 @@ export default function VerifyOtpScreen() {
 				behavior={Platform.OS === "ios" ? "padding" : "height"}
 				style={styles.flex}
 			>
-				<ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps={'handled'}>
+				<ScrollView
+					contentContainerStyle={styles.scrollContent}
+					keyboardShouldPersistTaps={"handled"}
+				>
 					<View style={styles.illustrationContainer}>
 						<View style={styles.illustrationBubble}>
 							<Text style={styles.illustrationEmoji}>✉️</Text>
@@ -142,7 +145,7 @@ export default function VerifyOtpScreen() {
 					<View style={styles.otpInputWrapper}>
 						<Pressable
 							accessible
-							accessibilityLabel={'OTP input'}
+							accessibilityLabel={"OTP input"}
 							onPress={() => {
 								// Small delay can help ensure keyboard shows on some Android devices
 								setTimeout(() => inputRef.current?.focus(), 50);
@@ -166,9 +169,9 @@ export default function VerifyOtpScreen() {
 							ref={inputRef}
 							value={otp}
 							onChangeText={(value) =>
-								setOtp(value.replace(/[^0-9]/g, '').slice(0, OTP_LENGTH))
+								setOtp(value.replace(/[^0-9]/g, "").slice(0, OTP_LENGTH))
 							}
-							keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
+							keyboardType={Platform.OS === "ios" ? "number-pad" : "numeric"}
 							returnKeyType="done"
 							style={styles.hiddenInput}
 							maxLength={OTP_LENGTH}
@@ -177,7 +180,7 @@ export default function VerifyOtpScreen() {
 							caretHidden={false}
 							autoCorrect={false}
 							underlineColorAndroid="transparent"
-							textContentType={Platform.OS === 'ios' ? 'oneTimeCode' : 'none'}
+							textContentType={Platform.OS === "ios" ? "oneTimeCode" : "none"}
 						/>
 					</View>
 
