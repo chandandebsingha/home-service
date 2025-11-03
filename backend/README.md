@@ -102,10 +102,10 @@ Important notes:
 
 - Don’t use the dev script (`npm run dev`) in production. It runs `nodemon` + `ts-node`, which watches files and consumes extra memory, leading to crashes on small instances.
 - Ensure the following environment variables are set in Render (Render Dashboard → Environment):
-   - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
-   - `DATABASE_URL`
-   - `JWT_SECRET`
-   - (Optional) `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`
+  - `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+  - `DATABASE_URL`
+  - `JWT_SECRET`
+  - (Optional) `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `EMAIL_FROM`
 - Port binding: the server reads `process.env.PORT` automatically via `config.port`; no need to hard-code a port.
 
 If you created the service manually in the Render dashboard, set:

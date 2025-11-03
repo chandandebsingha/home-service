@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "scripts": {
     "start": "node build/index.js",
-    "dev": "nodemon src/index.ts",
+    "dev": "node -e \"if(process.env.NODE_ENV==='production'){console.error('Refusing to run nodemon in production. Use npm start instead.');process.exit(1)}\" && nodemon src/index.ts",
     "build": "tsc",
     "start:mem": "node --max-old-space-size=1024 build/index.js",
     "build:dev": "tsc --watch",
