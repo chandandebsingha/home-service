@@ -69,6 +69,7 @@ export const serviceCategories = pgTable("service_categories", {
 	id: serial("id").primaryKey(),
 	name: text("name").notNull(),
 	description: text("description"),
+	emoji: text("emoji"),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -150,6 +151,32 @@ export const bookings = pgTable("bookings", {
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Reviews for completed bookings
+export const reviews = pgTable(
+	"reviews",
+	{
+		id: serial("id").primaryKey(),
+		bookingId: integer("booking_id")
+			.references(() => bookings.id)
+			.notNull(),
+		userId: integer("user_id")
+			.references(() => users.id)
+			.notNull(),
+		serviceId: integer("service_id").references(() => services.id),
+		providerId: integer("provider_id").references(() => users.id),
+		rating: integer("rating").notNull(),
+		comment: text("comment"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at").defaultNow().notNull(),
+	},
+	(table) => ({
+		bookingUnique: uniqueIndex("reviews_booking_unique").on(table.bookingId),
+		userIdx: index("reviews_user_idx").on(table.userId),
+		serviceIdx: index("reviews_service_idx").on(table.serviceId),
+		providerIdx: index("reviews_provider_idx").on(table.providerId),
+	})
+);
+
 export const emailVerificationTokens = pgTable(
 	"email_verification_tokens",
 	{
@@ -190,3 +217,5 @@ export type NewProviderProfile = typeof providerProfiles.$inferInsert;
 export type Address = typeof address.$inferSelect;
 export type EmailVerificationToken =
 	typeof emailVerificationTokens.$inferSelect;
+export type Review = typeof reviews.$inferSelect;
+export type NewReview = typeof reviews.$inferInsert;

@@ -11,6 +11,7 @@ async function ensureCategoriesTable(): Promise<void> {
       id serial primary key,
       name text not null,
       description text,
+			emoji text,
       created_at timestamp default now() not null,
       updated_at timestamp default now() not null
     )
@@ -90,12 +91,10 @@ router.get("/:id/types", async (req, res) => {
 		const rows = Array.isArray(result) ? result : result?.rows || [];
 		res.json({ success: true, data: rows });
 	} catch (e: any) {
-		res
-			.status(500)
-			.json({
-				success: false,
-				error: e?.message || "Failed to fetch service types",
-			});
+		res.status(500).json({
+			success: false,
+			error: e?.message || "Failed to fetch service types",
+		});
 	}
 });
 

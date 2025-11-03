@@ -78,6 +78,11 @@ export interface ProviderProfile {
 	occupation?: { id: number; name: string; description?: string | null } | null;
 }
 
+export interface RatingSummary {
+	averageRating: number;
+	ratingsCount: number;
+}
+
 export interface CreateProviderProfileRequest {
 	occupationId?: number;
 	businessName?: string;
@@ -162,6 +167,18 @@ class ApiService {
 	constructor() {
 		this.baseURL = API_CONFIG.BASE_URL;
 		this.timeout = API_CONFIG.TIMEOUT;
+	}
+
+	async getMyRatingSummary(token: string): Promise<ApiResponse<RatingSummary>> {
+		const res = await this.request<any>(
+			API_CONFIG.ENDPOINTS.PROVIDER.RATINGS.SUMMARY,
+			{
+				method: "GET",
+				headers: { Authorization: `Bearer ${token}` },
+			}
+		);
+		if (!res.success) return res;
+		return { success: true, data: (res.data?.data as RatingSummary) };
 	}
 
 	// Generic request method (returns parsed JSON as-is)

@@ -48,6 +48,7 @@ export interface Service {
 	serviceType?: string;
 	categoryId?: number;
 	serviceTypeId?: number;
+	providerId?: number;
 	durationMinutes?: number;
 	availability: boolean;
 	timeSlots?: string;
@@ -76,6 +77,15 @@ export interface Booking {
 	price: number;
 	status: "upcoming" | "completed" | "cancelled";
 	createdAt?: string;
+}
+
+// Reviews
+export interface SubmitReviewRequest {
+	bookingId: number;
+	rating: number; // 1-5
+	comment?: string;
+	serviceId?: number;
+	providerId?: number;
 }
 
 export interface CreateBookingRequest {
@@ -369,6 +379,20 @@ class ApiService {
 		});
 		if (!res.success) return res;
 		return { success: true, data: res.data?.data as Booking[] };
+	}
+
+	// Reviews (backend may not be ready; this method will try and ignore failures)
+	async submitReview(
+		token: string,
+		payload: SubmitReviewRequest
+	): Promise<ApiResponse<{ id?: number }>> {
+		const res = await this.request<any>("/reviews", {
+			method: "POST",
+			headers: { Authorization: `Bearer ${token}` },
+			body: JSON.stringify(payload),
+		});
+		if (!res.success) return res as ApiResponse<{ id?: number }>;
+		return { success: true, data: res.data?.data as { id?: number } };
 	}
 
 	// Addresses

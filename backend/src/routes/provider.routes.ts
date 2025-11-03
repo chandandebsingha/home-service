@@ -150,6 +150,9 @@ router.put(
 	ProviderController.updateBookingStatus
 );
 
+// Rating summary for provider
+router.get("/ratings/summary", ProviderController.getMyRatingSummary);
+
 // Provider profile routes
 router.post(
 	"/profile",

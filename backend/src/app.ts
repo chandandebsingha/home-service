@@ -13,6 +13,7 @@ import partnerRoutes from "./routes/partner.routes";
 import occupationRoutes from "./routes/occupation.routes";
 import serviceTypesRoutes from "./routes/serviceTypes.routes";
 import publicRoutes from "./routes/public.routes";
+import reviewsRoutes from "./routes/reviews.routes";
 
 const app = express();
 
@@ -60,6 +61,7 @@ app.use("/api/partner", partnerRoutes);
 app.use("/api/occupations", occupationRoutes);
 app.use("/api/service-types", serviceTypesRoutes);
 app.use("/api/public", publicRoutes);
+app.use("/api/reviews", reviewsRoutes);
 
 // Health check
 app.get("/", (req, res) => {

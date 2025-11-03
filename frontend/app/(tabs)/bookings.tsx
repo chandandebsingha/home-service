@@ -1,15 +1,19 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
 	View,
 	Text,
 	StyleSheet,
 	ScrollView,
 	TouchableOpacity,
+  Modal,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiService, Booking, Service } from "../../src/services/api";
+import RatingStars from "../../src/components/RatingStars";
 
 type BookingStatus = "upcoming" | "completed" | "cancelled";
 
@@ -20,6 +24,12 @@ export default function BookingsScreen() {
 	const [bookings, setBookings] = useState<Booking[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [serviceNames, setServiceNames] = useState<Record<number, Service>>({});
+	const [reviewModalVisible, setReviewModalVisible] = useState(false);
+	const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+	const [rating, setRating] = useState(0);
+	const [reviewText, setReviewText] = useState("");
+	const [submitting, setSubmitting] = useState(false);
+	const [localReviews, setLocalReviews] = useState<Record<number, { rating: number; comment?: string; submittedAt: string }>>({});
 
 	useEffect(() => {
 		let mounted = true;
@@ -50,6 +60,14 @@ export default function BookingsScreen() {
 					map[(s as Service).id] = s as Service;
 				});
 				setServiceNames(map);
+
+				// load local submitted reviews to mark UI
+				const stored = await AsyncStorage.getItem("booking_reviews");
+				if (stored) {
+					try {
+						setLocalReviews(JSON.parse(stored));
+					} catch {}
+				}
 			}
 			setLoading(false);
 		})();
@@ -74,6 +92,50 @@ export default function BookingsScreen() {
 				return "#ef4444";
 			default:
 				return "#6b7280";
+		}
+	};
+
+	const isReviewed = (bookingId: number) => !!localReviews[bookingId];
+
+	const openReview = (booking: Booking) => {
+		setSelectedBooking(booking);
+		const existing = localReviews[booking.id];
+		setRating(existing?.rating || 0);
+		setReviewText(existing?.comment || "");
+		setReviewModalVisible(true);
+	};
+
+	const submitReview = async () => {
+		if (!selectedBooking) return;
+		if (rating < 1) return; // minimal validation
+		setSubmitting(true);
+		try {
+			const token = await AsyncStorage.getItem("access_token");
+			if (token) {
+				// Attempt backend submission (non-blocking if backend lacks endpoint)
+				await apiService.submitReview(token, {
+					bookingId: selectedBooking.id,
+					rating,
+					comment: reviewText || undefined,
+					serviceId: selectedBooking.serviceId,
+					providerId: serviceNames[selectedBooking.serviceId]?.providerId,
+				});
+			}
+			// Persist locally so the UI reflects submitted state
+			const updated = {
+				...localReviews,
+				[selectedBooking.id]: {
+					rating,
+					comment: reviewText || undefined,
+					submittedAt: new Date().toISOString(),
+				},
+			};
+			setLocalReviews(updated);
+			await AsyncStorage.setItem("booking_reviews", JSON.stringify(updated));
+			setReviewModalVisible(false);
+			setSelectedBooking(null);
+		} finally {
+			setSubmitting(false);
 		}
 	};
 
@@ -175,6 +237,24 @@ export default function BookingsScreen() {
 												₹{booking.price.toLocaleString()}
 											</Text>
 										</View>
+
+										{booking.status === "completed" && (
+											<View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+												{isReviewed(booking.id) ? (
+													<View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+														<RatingStars rating={localReviews[booking.id].rating} onChange={() => {}} size={20} disabled />
+														<Text style={{ color: "#6b7280", fontSize: 12 }}>Reviewed</Text>
+													</View>
+												) : (
+													<TouchableOpacity
+														style={styles.reviewButton}
+														onPress={() => openReview(booking)}
+													>
+														<Text style={styles.reviewButtonText}>Rate & Review</Text>
+													</TouchableOpacity>
+												)}
+											</View>
+										)}
 									</View>
 								</View>
 							</TouchableOpacity>
@@ -182,6 +262,40 @@ export default function BookingsScreen() {
 					</View>
 				)}
 			</ScrollView>
+
+			{/* Review Modal */}
+			<Modal visible={reviewModalVisible} animationType="slide" transparent onRequestClose={() => setReviewModalVisible(false)}>
+				<View style={styles.modalBackdrop}>
+					<View style={styles.modalContent}>
+						<Text style={styles.modalTitle}>Rate & Review</Text>
+						<Text style={styles.modalSubtitle}>
+							{selectedBooking ? (serviceNames[selectedBooking.serviceId]?.name || "Service") : ""}
+						</Text>
+						<View style={{ alignItems: "center", marginVertical: 8 }}>
+							<RatingStars rating={rating} onChange={setRating} />
+						</View>
+						<TextInput
+							style={styles.textArea}
+							placeholder="Share your experience (optional)"
+							multiline
+							value={reviewText}
+							onChangeText={setReviewText}
+						/>
+						<View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+							<TouchableOpacity style={[styles.modalBtn, styles.modalCancel]} onPress={() => setReviewModalVisible(false)} disabled={submitting}>
+								<Text style={[styles.modalBtnText, { color: "#111827" }]}>Cancel</Text>
+							</TouchableOpacity>
+							<TouchableOpacity style={[styles.modalBtn, styles.modalSubmit]} onPress={submitReview} disabled={submitting || rating < 1}>
+								{submitting ? (
+									<ActivityIndicator color="#fff" />
+								) : (
+									<Text style={styles.modalBtnText}>Submit</Text>
+								)}
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
 		</SafeAreaView>
 	);
 }
@@ -304,5 +418,70 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "#111827",
 		fontWeight: "600",
+	},
+	reviewButton: {
+		paddingHorizontal: 12,
+		paddingVertical: 8,
+		borderRadius: 8,
+		backgroundColor: "#6366f1",
+	},
+	reviewButtonSecondary: {
+		backgroundColor: "#eef2ff",
+	},
+	reviewButtonText: {
+		color: "#fff",
+		fontWeight: "600",
+		fontSize: 13,
+	},
+	reviewButtonTextSecondary: {
+		color: "#4f46e5",
+	},
+	modalBackdrop: {
+		flex: 1,
+		backgroundColor: "rgba(0,0,0,0.3)",
+		justifyContent: "flex-end",
+	},
+	modalContent: {
+		backgroundColor: "#fff",
+		padding: 16,
+		borderTopLeftRadius: 16,
+		borderTopRightRadius: 16,
+	},
+	modalTitle: {
+		fontSize: 18,
+		fontWeight: "700",
+		color: "#111827",
+	},
+	modalSubtitle: {
+		fontSize: 14,
+		color: "#6b7280",
+		marginTop: 4,
+	},
+	textArea: {
+		borderWidth: 1,
+		borderColor: "#e5e7eb",
+		borderRadius: 10,
+		padding: 12,
+		minHeight: 90,
+		textAlignVertical: "top",
+		marginTop: 8,
+		color: "#111827",
+	},
+	modalBtn: {
+		flex: 1,
+		paddingVertical: 12,
+		borderRadius: 10,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	modalCancel: {
+		backgroundColor: "#f3f4f6",
+	},
+	modalSubmit: {
+		backgroundColor: "#6366f1",
+	},
+	modalBtnText: {
+		color: "#fff",
+		fontWeight: "700",
 	},
 });

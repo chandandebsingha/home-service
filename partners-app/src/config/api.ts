@@ -41,6 +41,9 @@ export const API_CONFIG = {
 				UPDATE_STATUS: (id: number | string) =>
 					`/provider/bookings/${id}/status`,
 			},
+			RATINGS: {
+				SUMMARY: "/provider/ratings/summary",
+			},
 			PROFILE: {
 				GET: "/provider/profile",
 				CREATE: "/provider/profile",

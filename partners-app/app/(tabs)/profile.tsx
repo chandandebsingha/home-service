@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
 	View,
 	Text,
@@ -11,6 +11,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "../../src/contexts/AuthContext";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiService, RatingSummary } from "../../src/services/api";
 
 const profileOptions = [
 	{
@@ -47,6 +49,24 @@ const profileOptions = [
 
 export default function ProfileScreen() {
 	const { user, isAuthenticated, logout, isLoading } = useAuth();
+	const [ratingSummary, setRatingSummary] = useState<RatingSummary | null>(null);
+	const [metricsLoading, setMetricsLoading] = useState(false);
+
+	useEffect(() => {
+		let mounted = true;
+		(async () => {
+			if (!isAuthenticated) return;
+			setMetricsLoading(true);
+			const token = await AsyncStorage.getItem("access_token");
+			if (!token) { setMetricsLoading(false); return; }
+			const res = await apiService.getMyRatingSummary(token);
+			if (mounted && res.success && res.data) {
+				setRatingSummary(res.data);
+			}
+			setMetricsLoading(false);
+		})();
+		return () => { mounted = false; };
+	}, [isAuthenticated]);
 
 	const handleOptionPress = (optionId: string) => {
 		Alert.alert("Feature", `${optionId} feature will be implemented soon!`);
@@ -135,7 +155,11 @@ export default function ProfileScreen() {
 					</View>
 					<View style={styles.statDivider} />
 					<View style={styles.statItem}>
-						<Text style={styles.statNumber}>4.8</Text>
+						<Text style={styles.statNumber}>
+							{metricsLoading
+								? "--"
+								: (ratingSummary?.averageRating ?? 0).toFixed(1)}
+						</Text>
 						<Text style={styles.statLabel}>Avg Rating</Text>
 					</View>
 				</View>
