@@ -3,5 +3,5 @@
   "/page": "app/page.js",
   "/auth/login/page": "app/auth/login/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/partner/page": "app/partner/page.js"
+  "/admin/types/page": "app/admin/types/page.js"
 }

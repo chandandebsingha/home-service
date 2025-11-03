@@ -10,8 +10,8 @@
       "barStyle": "light-content"
     },
     "splash": {
-      "backgroundColor": "#FFFFFF",
-      "image": "./assets/splash-icon.png",
+      "backgroundColor": "#000000",
+      "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain"
     },
     "scheme": "partners-app",
@@ -42,7 +42,7 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#000"
+          "backgroundColor": "#000000"
         }
       ]
     ],

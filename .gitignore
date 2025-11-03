@@ -81,3 +81,7 @@ android-sdk/ -e
 # Environment files
 *.env
 *.env.*
+
+# Expo local state (ignore in all packages)
+.expo/
+**/.expo/
