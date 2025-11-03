@@ -1,1 +1,0 @@
-{"version":3,"file":"review.controller.d.ts","sourceRoot":"","sources":["../../../src/controllers/review.controller.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,OAAO,EAAE,QAAQ,EAAE,MAAM,SAAS,CAAC;AAK5C,qBAAa,gBAAgB;WACf,MAAM,CAAC,GAAG,EAAE,OAAO,EAAE,GAAG,EAAE,QAAQ,GAAG,OAAO,CAAC,IAAI,CAAC;CAyG/D"}
