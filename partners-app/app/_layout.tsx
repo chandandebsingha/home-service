@@ -1,12 +1,23 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Text } from 'react-native';
 import { AuthProvider } from '../src/contexts/AuthContext';
 
 export default function RootLayout() {
+  // Enforce a readable default text color regardless of device theme
+  useEffect(() => {
+    const prev = (Text as any).defaultProps?.style;
+    (Text as any).defaultProps = {
+      ...((Text as any).defaultProps || {}),
+      style: [{ color: '#111111' }, prev].filter(Boolean),
+    };
+  }, []);
+
   return (
     <AuthProvider>
-      <StatusBar style="auto" />
+      {/* Partners app uses darker surfaces in places; keep status icons light */}
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerStyle: {

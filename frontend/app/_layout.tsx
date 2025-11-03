@@ -1,12 +1,24 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { Text } from "react-native";
 import { AuthProvider } from "../src/contexts/AuthContext";
 
 export default function RootLayout() {
+	
+	useEffect(() => {
+	
+		const prev = (Text as any).defaultProps?.style;
+		(Text as any).defaultProps = {
+			...((Text as any).defaultProps || {}),
+			style: [{ color: "#111111" }, prev].filter(Boolean),
+		};
+	}, []);
+
 	return (
 		<AuthProvider>
-			<StatusBar style="auto" />
+			{/* Use a fixed status bar style for consistent contrast */}
+			<StatusBar style="dark" />
 			<Stack
 				screenOptions={{
 					headerStyle: {

@@ -196,7 +196,6 @@ export default function HomeScreen({
 							isEmoji: Boolean(emoji),
 						} as UICategory;
 					});
-					console.debug("mapped categories", mapped);
 					setServiceCategories(mapped);
 				} else {
 					setCategoriesError(res.error || "Failed to load categories");

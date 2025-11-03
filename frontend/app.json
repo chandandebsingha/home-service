@@ -6,7 +6,8 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "androidStatusBar": {
-      "backgroundColor": "#FFFFFF"
+      "backgroundColor": "#FFFFFF",
+      "barStyle": "dark-content"
     },
     "splash": {
       "backgroundColor": "#FFFFFF",
@@ -14,7 +15,7 @@
       "resizeMode": "contain"
     },
     "scheme": "frontend",
-    "userInterfaceStyle": "automatic",
+  "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
@@ -29,7 +30,8 @@
       "permissions": [
         "INTERNET",
         "ACCESS_NETWORK_STATE"
-      ]
+      ],
+      "userInterfaceStyle": "light"
     },
     "web": {
       "bundler": "metro",
