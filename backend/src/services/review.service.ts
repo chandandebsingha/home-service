@@ -3,11 +3,19 @@ import * as schema from "../../drizzle/schema";
 import { and, eq, sql } from "drizzle-orm";
 
 export class ReviewService {
-	static async getByBookingAndTarget(bookingId: number, target: 'provider' | 'customer') {
+	static async getByBookingAndTarget(
+		bookingId: number,
+		target: "provider" | "customer"
+	) {
 		const rows = await db
 			.select()
 			.from(schema.reviews)
-			.where(and(eq(schema.reviews.bookingId, bookingId), eq(schema.reviews.target, target as any)))
+			.where(
+				and(
+					eq(schema.reviews.bookingId, bookingId),
+					eq(schema.reviews.target, target as any)
+				)
+			)
 			.limit(1);
 		return rows[0] || null;
 	}

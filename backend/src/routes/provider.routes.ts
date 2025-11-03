@@ -155,9 +155,22 @@ router.put(
 router.post(
 	"/reviews/user",
 	validateRequest([
-		{ field: "bookingId", validator: Validators.isNumber, message: "bookingId must be a number" },
-		{ field: "rating", validator: Validators.isNumber, message: "rating must be a number" },
-		{ field: "comment", validator: Validators.isString, message: "comment must be a string", optional: true },
+		{
+			field: "bookingId",
+			validator: Validators.isNumber,
+			message: "bookingId must be a number",
+		},
+		{
+			field: "rating",
+			validator: Validators.isNumber,
+			message: "rating must be a number",
+		},
+		{
+			field: "comment",
+			validator: Validators.isString,
+			message: "comment must be a string",
+			optional: true,
+		},
 	]),
 	UserReviewController.create
 );

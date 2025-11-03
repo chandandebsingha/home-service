@@ -33,46 +33,59 @@ export class ReviewController {
 				return;
 			}
 			if (booking.status !== "completed") {
-				res
-					.status(400)
-					.json({
-						success: false,
-						error: "You can only review completed bookings",
-					});
+				res.status(400).json({
+					success: false,
+					error: "You can only review completed bookings",
+				});
 				return;
 			}
 
-			const reviewTarget: 'provider' | 'customer' = target === 'customer' ? 'customer' : 'provider';
+			const reviewTarget: "provider" | "customer" =
+				target === "customer" ? "customer" : "provider";
 
 			// authorization depending on direction
-			if (reviewTarget === 'provider') {
+			if (reviewTarget === "provider") {
 				if (booking.userId !== user.userId) {
-					res.status(403).json({ success: false, error: 'Not allowed to review this booking' });
+					res
+						.status(403)
+						.json({
+							success: false,
+							error: "Not allowed to review this booking",
+						});
 					return;
 				}
 			} else {
 				// provider reviewing customer -> must own the service
 				const serviceCheck = await ServiceService.getById(booking.serviceId);
 				if (!serviceCheck || (serviceCheck as any).providerId !== user.userId) {
-					res.status(403).json({ success: false, error: 'You can only review customers for your own services' });
+					res
+						.status(403)
+						.json({
+							success: false,
+							error: "You can only review customers for your own services",
+						});
 					return;
 				}
 			}
 
-			const existing = await ReviewService.getByBookingAndTarget(parsedBookingId, reviewTarget);
+			const existing = await ReviewService.getByBookingAndTarget(
+				parsedBookingId,
+				reviewTarget
+			);
 			if (existing) {
-				res
-					.status(409)
-					.json({
-						success: false,
-						error: "Review already exists for this booking",
-					});
+				res.status(409).json({
+					success: false,
+					error: "Review already exists for this booking",
+				});
 				return;
 			}
 
 			const service = await ServiceService.getById(booking.serviceId);
 			const reviewerId = user.userId;
-			const revieweeId = reviewTarget === 'provider' ? (service as any)?.providerId : booking.userId;
+			const revieweeId =
+				reviewTarget === "provider"
+					? (service as any)?.providerId
+					: booking.userId;
 
 			const created = await ReviewService.create({
 				bookingId: booking.id,
@@ -90,12 +103,10 @@ export class ReviewController {
 
 			res.status(201).json({ success: true, data: created });
 		} catch (error: any) {
-			res
-				.status(500)
-				.json({
-					success: false,
-					error: error.message || "Failed to submit review",
-				});
+			res.status(500).json({
+				success: false,
+				error: error.message || "Failed to submit review",
+			});
 		}
 	}
 }

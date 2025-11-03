@@ -152,7 +152,10 @@ export const bookings = pgTable("bookings", {
 });
 
 // Reviews for completed bookings
-export const reviewTargetEnum = pgEnum("review_target", ["provider", "customer"]);
+export const reviewTargetEnum = pgEnum("review_target", [
+	"provider",
+	"customer",
+]);
 
 export const reviews = pgTable(
 	"reviews",
@@ -164,8 +167,12 @@ export const reviews = pgTable(
 		userId: integer("user_id").references(() => users.id), // legacy creator id
 		serviceId: integer("service_id").references(() => services.id),
 		providerId: integer("provider_id").references(() => users.id), // legacy denorm
-		reviewerId: integer("reviewer_id").references(() => users.id).notNull(),
-		revieweeId: integer("reviewee_id").references(() => users.id).notNull(),
+		reviewerId: integer("reviewer_id")
+			.references(() => users.id)
+			.notNull(),
+		revieweeId: integer("reviewee_id")
+			.references(() => users.id)
+			.notNull(),
 		target: reviewTargetEnum("target").notNull(),
 		rating: integer("rating").notNull(),
 		comment: text("comment"),
