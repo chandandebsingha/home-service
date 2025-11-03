@@ -15,7 +15,7 @@
       "resizeMode": "contain"
     },
     "scheme": "frontend",
-  "userInterfaceStyle": "light",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true

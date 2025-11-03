@@ -5,7 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-     "androidStatusBar": {
+    "androidStatusBar": {
       "backgroundColor": "#000000",
       "barStyle": "light-content"
     },
@@ -15,7 +15,7 @@
       "resizeMode": "contain"
     },
     "scheme": "partners-app",
-  "userInterfaceStyle": "light",
+    "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true
@@ -52,7 +52,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "72ab6f29-6520-4716-b5e6-2b4b1fca7874"
+        "projectId": "9b313aa3-d90d-4cdc-b82d-76dec1397117"
       }
     }
   }

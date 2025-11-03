@@ -5,9 +5,7 @@ import { Text } from "react-native";
 import { AuthProvider } from "../src/contexts/AuthContext";
 
 export default function RootLayout() {
-	
 	useEffect(() => {
-	
 		const prev = (Text as any).defaultProps?.style;
 		(Text as any).defaultProps = {
 			...((Text as any).defaultProps || {}),
