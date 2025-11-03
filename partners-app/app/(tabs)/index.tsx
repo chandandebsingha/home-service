@@ -120,14 +120,14 @@ export default function PartnerDashboard() {
 				monthlyEarnings,
 			});
 
-			// Set recent bookings (last 5)
+			// Set recent bookings (last 3)
 			const recent = bookings
 				.sort(
 					(a, b) =>
 						new Date(b.createdAt || "").getTime() -
 						new Date(a.createdAt || "").getTime()
 				)
-				.slice(0, 5)
+				.slice(0, 3)
 				.map((booking) => ({
 					...booking,
 					serviceName:
