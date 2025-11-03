@@ -7,6 +7,7 @@
     "start": "node build/index.js",
     "dev": "nodemon src/index.ts",
     "build": "tsc",
+    "start:mem": "node --max-old-space-size=1024 build/index.js",
     "build:dev": "tsc --watch",
     "clean": "rm -rf build",
     "db:generate": "drizzle-kit generate",
@@ -68,7 +69,7 @@
   "author": "Your Name",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0",
+    "node": "20.x",
     "npm": ">=8.0.0"
   }
 }
