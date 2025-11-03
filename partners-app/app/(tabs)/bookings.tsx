@@ -8,11 +8,16 @@ import {
 	Alert,
 	RefreshControl,
 	Pressable,
+  Modal,
+  TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "@/src/contexts/AuthContext";
 import { router } from "expo-router";
 import { apiService, Booking as ApiBooking } from "@/src/services/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import RatingStars from "@/src/components/RatingStars";
 
 type Booking = ApiBooking;
 type BookingStatus = Booking["status"];
@@ -26,10 +31,23 @@ export default function PartnerBookingsScreen() {
 	const [serviceMap, setServiceMap] = useState<Record<number, string>>({});
 	const [loading, setLoading] = useState(true);
 	const [refreshing, setRefreshing] = useState(false);
+	const [reviewModalVisible, setReviewModalVisible] = useState(false);
+	const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
+	const [rating, setRating] = useState(0);
+	const [reviewText, setReviewText] = useState("");
+	const [submitting, setSubmitting] = useState(false);
+	const [localUserReviews, setLocalUserReviews] = useState<Record<number, { rating: number; comment?: string; submittedAt: string }>>({});
 
 	useEffect(() => {
 		// reload when authentication or token changes
 		loadBookings();
+		// load existing local user reviews
+		(async () => {
+			const stored = await AsyncStorage.getItem("partner_user_reviews");
+			if (stored) {
+				try { setLocalUserReviews(JSON.parse(stored)); } catch {}
+			}
+		})();
 	}, [isAuthenticated, accessToken]);
 
 	const loadBookings = useCallback(async () => {
@@ -134,6 +152,42 @@ export default function PartnerBookingsScreen() {
 		}
 	};
 
+	const isUserReviewed = (bookingId: number) => !!localUserReviews[bookingId];
+
+	const openUserReview = (booking: Booking) => {
+		setSelectedBooking(booking);
+		const existing = localUserReviews[booking.id];
+		setRating(existing?.rating || 0);
+		setReviewText(existing?.comment || "");
+		setReviewModalVisible(true);
+	};
+
+	const submitUserReview = async () => {
+		if (!selectedBooking) return;
+		if (rating < 1) return;
+		setSubmitting(true);
+		try {
+			if (!accessToken) return;
+			await apiService.submitUserReview(accessToken, {
+				bookingId: selectedBooking.id,
+				rating,
+				comment: reviewText || undefined,
+			});
+			const updated = {
+				...localUserReviews,
+				[selectedBooking.id]: { rating, comment: reviewText || undefined, submittedAt: new Date().toISOString() },
+			};
+			setLocalUserReviews(updated);
+			await AsyncStorage.setItem("partner_user_reviews", JSON.stringify(updated));
+			setReviewModalVisible(false);
+			setSelectedBooking(null);
+		} catch (e: any) {
+			Alert.alert("Review", e?.message || "Failed to submit review");
+		} finally {
+			setSubmitting(false);
+		}
+	};
+
 	const formatStatus = (status: BookingStatus) => status.replace(/-/g, " ");
 
 	const formatCurrency = (value: number) =>
@@ -223,6 +277,28 @@ export default function PartnerBookingsScreen() {
 						</TouchableOpacity>
 					</View>
 				</>
+			)}
+
+			{booking.status === "completed" && (
+				<View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+					{(() => {
+						const stars = localUserReviews[booking.id]?.rating || 0;
+						if (stars === 0) {
+							return (
+								<TouchableOpacity style={styles.primaryActionButton} activeOpacity={0.85} onPress={() => openUserReview(booking)}>
+									<MaterialIcons name="star" size={18} color="#f8fafc" />
+									<Text style={styles.primaryActionText}>Rate Customer</Text>
+								</TouchableOpacity>
+							);
+						}
+						return (
+							<View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+								<RatingStars rating={stars} onChange={() => {}} size={20} disabled />
+								<Text style={{ color: "#6b7280", fontSize: 12 }}>Customer reviewed</Text>
+							</View>
+						);
+					})()}
+				</View>
 			)}
 		</Pressable>
 	);
@@ -316,6 +392,33 @@ export default function PartnerBookingsScreen() {
 					</View>
 				)}
 			</ScrollView>
+
+			{/* Review Modal */}
+			<Modal visible={reviewModalVisible} animationType="slide" transparent onRequestClose={() => setReviewModalVisible(false)}>
+				<View style={modalStyles.backdrop}>
+					<View style={modalStyles.content}>
+						<Text style={modalStyles.title}>Rate Customer</Text>
+						<View style={{ alignItems: "center", marginVertical: 8 }}>
+							<RatingStars rating={rating} onChange={setRating} />
+						</View>
+						<TextInput
+							style={modalStyles.textArea}
+							placeholder="Add a note (optional)"
+							multiline
+							value={reviewText}
+							onChangeText={setReviewText}
+						/>
+						<View style={{ flexDirection: "row", gap: 12, marginTop: 12 }}>
+							<TouchableOpacity style={[modalStyles.btn, modalStyles.cancel]} onPress={() => setReviewModalVisible(false)} disabled={submitting}>
+								<Text style={[modalStyles.btnText, { color: "#111827" }]}>Cancel</Text>
+							</TouchableOpacity>
+							<TouchableOpacity style={[modalStyles.btn, modalStyles.submit]} onPress={submitUserReview} disabled={submitting || rating < 1}>
+								{submitting ? <ActivityIndicator color="#fff" /> : <Text style={modalStyles.btnText}>Submit</Text>}
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
 		</View>
 	);
 }
@@ -600,4 +703,15 @@ const styles = StyleSheet.create({
 		textAlign: "center",
 		lineHeight: 24,
 	},
+});
+
+const modalStyles = StyleSheet.create({
+	backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-end" },
+	content: { backgroundColor: "#fff", padding: 16, borderTopLeftRadius: 16, borderTopRightRadius: 16 },
+	title: { fontSize: 18, fontWeight: "700", color: "#111827" },
+	textArea: { borderWidth: 1, borderColor: "#e5e7eb", borderRadius: 10, padding: 12, minHeight: 90, textAlignVertical: "top", marginTop: 8, color: "#111827" },
+	btn: { flex: 1, paddingVertical: 12, borderRadius: 10, alignItems: "center", justifyContent: "center" },
+	cancel: { backgroundColor: "#f3f4f6" },
+	submit: { backgroundColor: "#6366f1" },
+	btnText: { color: "#fff", fontWeight: "700" },
 });

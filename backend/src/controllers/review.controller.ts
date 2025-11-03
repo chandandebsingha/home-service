@@ -7,7 +7,7 @@ export class ReviewController {
 	static async create(req: Request, res: Response): Promise<void> {
 		try {
 			const user = (req as any).user;
-			const { bookingId, rating, comment } = req.body || {};
+			const { bookingId, rating, comment, target } = req.body || {};
 
 			const parsedBookingId = Number(bookingId);
 			const parsedRating = Number(rating);
@@ -32,15 +32,6 @@ export class ReviewController {
 				res.status(404).json({ success: false, error: "Booking not found" });
 				return;
 			}
-			if (booking.userId !== user.userId) {
-				res
-					.status(403)
-					.json({
-						success: false,
-						error: "Not allowed to review this booking",
-					});
-				return;
-			}
 			if (booking.status !== "completed") {
 				res
 					.status(400)
@@ -51,7 +42,24 @@ export class ReviewController {
 				return;
 			}
 
-			const existing = await ReviewService.getByBookingId(parsedBookingId);
+			const reviewTarget: 'provider' | 'customer' = target === 'customer' ? 'customer' : 'provider';
+
+			// authorization depending on direction
+			if (reviewTarget === 'provider') {
+				if (booking.userId !== user.userId) {
+					res.status(403).json({ success: false, error: 'Not allowed to review this booking' });
+					return;
+				}
+			} else {
+				// provider reviewing customer -> must own the service
+				const serviceCheck = await ServiceService.getById(booking.serviceId);
+				if (!serviceCheck || (serviceCheck as any).providerId !== user.userId) {
+					res.status(403).json({ success: false, error: 'You can only review customers for your own services' });
+					return;
+				}
+			}
+
+			const existing = await ReviewService.getByBookingAndTarget(parsedBookingId, reviewTarget);
 			if (existing) {
 				res
 					.status(409)
@@ -63,12 +71,19 @@ export class ReviewController {
 			}
 
 			const service = await ServiceService.getById(booking.serviceId);
+			const reviewerId = user.userId;
+			const revieweeId = reviewTarget === 'provider' ? (service as any)?.providerId : booking.userId;
 
 			const created = await ReviewService.create({
 				bookingId: booking.id,
-				userId: user.userId,
+				// legacy columns for compatibility
+				userId: reviewerId,
 				serviceId: booking.serviceId,
-				providerId: service?.providerId ?? (null as any),
+				providerId: (service as any)?.providerId ?? (null as any),
+				// unified columns
+				reviewerId,
+				revieweeId: revieweeId as any,
+				target: reviewTarget as any,
 				rating: parsedRating,
 				comment: comment ? String(comment) : (null as any),
 			} as any);

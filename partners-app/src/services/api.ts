@@ -146,6 +146,12 @@ export interface Address {
 	updatedAt?: string;
 }
 
+export interface SubmitUserReviewRequest {
+	bookingId: number;
+	rating: number;
+	comment?: string;
+}
+
 export interface CreateAddressRequest {
 	street: string;
 	apartment?: string;
@@ -603,6 +609,23 @@ class ApiService {
 			method: "DELETE",
 			headers: { Authorization: `Bearer ${token}` },
 		});
+	}
+
+	// Provider -> review a customer for a completed booking
+	async submitUserReview(
+		token: string,
+		payload: SubmitUserReviewRequest
+	): Promise<ApiResponse<{ id?: number }>> {
+		const res = await this.request<any>(
+			API_CONFIG.ENDPOINTS.PROVIDER.REVIEWS.USER_CREATE,
+			{
+				method: "POST",
+				headers: { Authorization: `Bearer ${token}` },
+				body: JSON.stringify(payload),
+			}
+		);
+		if (!res.success) return res as ApiResponse<{ id?: number }>;
+		return { success: true, data: res.data?.data as { id?: number } };
 	}
 }
 

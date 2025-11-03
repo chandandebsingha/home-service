@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { ProviderController } from "../controllers/provider.controller";
 import { ProviderProfileController } from "../controllers/provider-profile.controller";
+import { UserReviewController } from "../controllers/user-review.controller";
 import { authenticateToken } from "../middleware/auth.middleware";
 import {
 	validateRequest,
@@ -148,6 +149,17 @@ router.put(
 		},
 	]),
 	ProviderController.updateBookingStatus
+);
+
+// Provider reviews a customer for a completed booking
+router.post(
+	"/reviews/user",
+	validateRequest([
+		{ field: "bookingId", validator: Validators.isNumber, message: "bookingId must be a number" },
+		{ field: "rating", validator: Validators.isNumber, message: "rating must be a number" },
+		{ field: "comment", validator: Validators.isString, message: "comment must be a string", optional: true },
+	]),
+	UserReviewController.create
 );
 
 // Rating summary for provider

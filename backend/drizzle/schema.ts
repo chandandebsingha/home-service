@@ -152,6 +152,8 @@ export const bookings = pgTable("bookings", {
 });
 
 // Reviews for completed bookings
+export const reviewTargetEnum = pgEnum("review_target", ["provider", "customer"]);
+
 export const reviews = pgTable(
 	"reviews",
 	{
@@ -159,23 +161,31 @@ export const reviews = pgTable(
 		bookingId: integer("booking_id")
 			.references(() => bookings.id)
 			.notNull(),
-		userId: integer("user_id")
-			.references(() => users.id)
-			.notNull(),
+		userId: integer("user_id").references(() => users.id), // legacy creator id
 		serviceId: integer("service_id").references(() => services.id),
-		providerId: integer("provider_id").references(() => users.id),
+		providerId: integer("provider_id").references(() => users.id), // legacy denorm
+		reviewerId: integer("reviewer_id").references(() => users.id).notNull(),
+		revieweeId: integer("reviewee_id").references(() => users.id).notNull(),
+		target: reviewTargetEnum("target").notNull(),
 		rating: integer("rating").notNull(),
 		comment: text("comment"),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at").defaultNow().notNull(),
 	},
 	(table) => ({
-		bookingUnique: uniqueIndex("reviews_booking_unique").on(table.bookingId),
+		bookingTargetUnique: uniqueIndex("reviews_booking_target_unique").on(
+			table.bookingId,
+			table.target
+		),
 		userIdx: index("reviews_user_idx").on(table.userId),
 		serviceIdx: index("reviews_service_idx").on(table.serviceId),
 		providerIdx: index("reviews_provider_idx").on(table.providerId),
+		reviewerIdx: index("reviews_reviewer_idx").on(table.reviewerId),
+		revieweeIdx: index("reviews_reviewee_idx").on(table.revieweeId),
 	})
 );
+
+// Provider rates the customer after a completed booking
 
 export const emailVerificationTokens = pgTable(
 	"email_verification_tokens",
