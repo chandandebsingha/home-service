@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useAuth } from "@/src/contexts/AuthContext";
-import { Link, router } from "expo-router";
+import { router } from "expo-router";
 import { apiService, Booking as ApiBooking } from "@/src/services/api";
 
 type Booking = ApiBooking;
@@ -164,16 +164,10 @@ export default function PartnerBookingsScreen() {
 								{ backgroundColor: getStatusColor(booking.status) },
 							]}
 						/>
-						<Text style={styles.statusText}>{formatStatus(booking.status)}</Text>
+						<Text style={styles.statusText}>
+							{formatStatus(booking.status)}
+						</Text>
 					</View>
-					<Link
-						href={`/bookings/${booking.id}` as any}
-						asChild
-					>
-						<TouchableOpacity style={styles.viewButton} activeOpacity={0.85}>
-							<Text style={styles.viewButtonText}>View</Text>
-						</TouchableOpacity>
-					</Link>
 				</View>
 			</View>
 
@@ -214,10 +208,10 @@ export default function PartnerBookingsScreen() {
 						<TouchableOpacity
 							style={styles.primaryActionButton}
 							activeOpacity={0.85}
-							onPress={() => handleUpdateStatus(booking.id, "completed")}
+							onPress={() => router.push(`/bookings/${booking.id}`)}
 						>
-							<MaterialIcons name="done" size={18} color="#f8fafc" />
-							<Text style={styles.primaryActionText}>Complete</Text>
+							<MaterialIcons name="visibility" size={18} color="#f8fafc" />
+							<Text style={styles.primaryActionText}>View</Text>
 						</TouchableOpacity>
 						<TouchableOpacity
 							style={styles.secondaryActionButton}
@@ -525,7 +519,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		justifyContent: "center",
-		backgroundColor: "#111827",
+		backgroundColor: "#4338ca",
 		borderRadius: 999,
 		paddingVertical: 12,
 		paddingHorizontal: 18,

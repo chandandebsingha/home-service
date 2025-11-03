@@ -53,6 +53,10 @@ export const API_CONFIG = {
 				LIST: "/partner/bookings",
 				UPDATE_STATUS: (id: number | string) =>
 					`/partner/bookings/${id}/status`,
+				REQUEST_COMPLETE_OTP: (id: number | string) =>
+					`/partner/bookings/${id}/complete-otp`,
+				COMPLETE_VERIFY: (id: number | string) =>
+					`/partner/bookings/${id}/complete-verify`,
 			},
 		},
 		ADDRESSES: {
