@@ -105,6 +105,58 @@ class AuthController {
             });
         }
     }
+    static async verifyEmailOtp(req, res) {
+        try {
+            const { email, otp } = req.body;
+            const result = await auth_service_1.AuthService.verifyEmailOtp({ email, otp });
+            const userProfile = {
+                id: result.user.id,
+                email: result.user.email,
+                fullName: result.user.fullName || "",
+                role: result.user.role || "user",
+                isEmailVerified: result.user.isEmailVerified || false,
+                createdAt: result.user.createdAt || undefined,
+                lastLogin: result.user.lastLogin || undefined,
+            };
+            const response = {
+                success: true,
+                message: "Email verified successfully",
+                data: {
+                    user: userProfile,
+                    accessToken: result.accessToken,
+                    refreshToken: result.refreshToken,
+                },
+            };
+            res.status(200).json(response);
+        }
+        catch (error) {
+            const response = {
+                success: false,
+                message: "OTP verification failed",
+                error: error.message,
+            };
+            res.status(400).json(response);
+        }
+    }
+    static async resendEmailOtp(req, res) {
+        try {
+            const { email } = req.body;
+            await auth_service_1.AuthService.resendEmailOtp(email);
+            const response = {
+                success: true,
+                message: "OTP resent successfully",
+            };
+            res.status(200).json(response);
+        }
+        catch (error) {
+            const response = {
+                success: false,
+                message: "Failed to resend OTP",
+                error: error.message,
+            };
+            res.status(400).json(response);
+        }
+    }
 }
 exports.AuthController = AuthController;
 //# sourceMappingURL=auth.controller.js.map

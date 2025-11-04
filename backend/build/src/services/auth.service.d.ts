@@ -1,4 +1,4 @@
-import { LoginRequest, RegisterRequest } from "../types/auth.types";
+import { LoginRequest, RegisterRequest, VerifyEmailOtpRequest } from "../types/auth.types";
 export declare class AuthService {
     static register(userData: RegisterRequest): Promise<{
         user: {
@@ -44,5 +44,21 @@ export declare class AuthService {
         lastLogin: Date | null;
         createdAt: Date;
     }>;
+    static verifyEmailOtp(payload: VerifyEmailOtpRequest): Promise<{
+        user: {
+            role: "user" | "admin" | "partner" | null;
+            id: number;
+            supabaseUid: string;
+            email: string;
+            passwordHash: string | null;
+            fullName: string;
+            isEmailVerified: boolean;
+            lastLogin: Date | null;
+            createdAt: Date;
+        };
+        accessToken: string;
+        refreshToken: string;
+    }>;
+    static resendEmailOtp(email: string): Promise<void>;
 }
 //# sourceMappingURL=auth.service.d.ts.map

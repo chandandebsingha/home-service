@@ -15,6 +15,12 @@ router.put("/bookings/:id/status", (0, validation_middleware_1.validateRequest)(
     },
 ]), partner_controller_1.PartnerController.updateBookingStatus);
 router.post("/bookings/:id/complete-otp", partner_controller_1.PartnerController.requestCompletionOtp);
-router.post("/bookings/:id/complete-verify", partner_controller_1.PartnerController.verifyCompletionOtp);
+router.post("/bookings/:id/complete-verify", (0, validation_middleware_1.validateRequest)([
+    {
+        field: "otp",
+        validator: validation_middleware_1.Validators.minLength(4),
+        message: "otp must be at least 4 characters",
+    },
+]), partner_controller_1.PartnerController.verifyCompletionOtp);
 exports.default = router;
 //# sourceMappingURL=partner.routes.js.map

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerSchema = exports.loginSchema = exports.registerRules = exports.loginRules = void 0;
+exports.resendEmailOtpSchema = exports.verifyEmailOtpSchema = exports.registerSchema = exports.loginSchema = exports.registerRules = exports.loginRules = void 0;
 const validation_middleware_1 = require("../middleware/validation.middleware");
 exports.loginRules = [
     {
@@ -33,4 +33,23 @@ exports.registerRules = [
 ];
 exports.loginSchema = exports.loginRules;
 exports.registerSchema = exports.registerRules;
+exports.verifyEmailOtpSchema = [
+    {
+        field: "email",
+        validator: validation_middleware_1.Validators.isEmail,
+        message: "Invalid email address",
+    },
+    {
+        field: "otp",
+        validator: validation_middleware_1.Validators.minLength(4),
+        message: "OTP must be at least 4 characters long",
+    },
+];
+exports.resendEmailOtpSchema = [
+    {
+        field: "email",
+        validator: validation_middleware_1.Validators.isEmail,
+        message: "Invalid email address",
+    },
+];
 //# sourceMappingURL=validators.js.map

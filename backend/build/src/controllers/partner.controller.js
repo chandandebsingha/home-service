@@ -6,6 +6,7 @@ const service_service_1 = require("../services/service.service");
 const db_1 = require("../db");
 const schema_1 = require("../../drizzle/schema");
 const drizzle_orm_1 = require("drizzle-orm");
+const email_verification_service_1 = require("../services/email-verification.service");
 class PartnerController {
     static async getBookings(req, res) {
         try {
@@ -107,9 +108,8 @@ class PartnerController {
                 res.status(404).json({ success: false, error: "Customer not found" });
                 return;
             }
-            res
-                .status(200)
-                .json({ success: true, message: "OTP-based confirmation disabled" });
+            await email_verification_service_1.EmailVerificationService.createAndSend(targetUser);
+            res.status(200).json({ success: true, message: "OTP sent" });
         }
         catch (error) {
             const message = error instanceof Error
@@ -128,8 +128,13 @@ class PartnerController {
                 return;
             }
             const bookingId = parseInt(req.params.id, 10);
+            const { otp } = req.body;
             if (Number.isNaN(bookingId)) {
                 res.status(400).json({ success: false, error: "Invalid booking ID" });
+                return;
+            }
+            if (!otp) {
+                res.status(400).json({ success: false, error: "otp is required" });
                 return;
             }
             const booking = await booking_service_1.BookingService.getById(bookingId);
@@ -154,6 +159,7 @@ class PartnerController {
                 res.status(404).json({ success: false, error: "Customer not found" });
                 return;
             }
+            await email_verification_service_1.EmailVerificationService.verify(targetUser.email, String(otp));
             const updated = await booking_service_1.BookingService.updateStatus(bookingId, "completed");
             res.status(200).json({ success: true, data: updated });
         }
