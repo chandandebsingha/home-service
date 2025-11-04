@@ -95,7 +95,7 @@ npm start
 This repository includes a `render.yaml` blueprint at the repo root that defines a web service for the backend (Root directory: `backend`). If you deploy with the blueprint, Render will:
 
 - Install and build: `npm ci && npm run build`
-- Start the server: `npm run start:mem` (which runs `node --max-old-space-size=1024 build/index.js`)
+- Start the server: `npm start`
 - Health check path: `/`
 
 Important notes:
@@ -112,7 +112,7 @@ If you created the service manually in the Render dashboard, set:
 
 - Root Directory: `backend`
 - Build Command: `npm ci && npm run build`
-- Start Command: `npm start` (or `npm run start:mem` on low-memory plans)
+- Start Command: `npm start`
 
 After saving, trigger a deploy. If you see “No open ports detected,” double-check that the Start Command uses the production build and that required env vars are present.
 

@@ -4,8 +4,8 @@ services:
     env: node
     rootDir: backend
     buildCommand: npm ci && npm run build
-    # Use the production start with a conservative V8 heap size to avoid OOM on small plans
-    startCommand: npm run start:mem
+  # Start the compiled server; PORT is provided by Render
+    startCommand: npm run start
     healthCheckPath: /
     autoDeploy: true
     plan: free
