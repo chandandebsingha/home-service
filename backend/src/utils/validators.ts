@@ -39,23 +39,4 @@ export const registerRules: ValidationRule[] = [
 // Export schemas for validation middleware
 export const loginSchema = loginRules;
 export const registerSchema = registerRules;
-export const verifyEmailOtpSchema: ValidationRule[] = [
-	{
-		field: "email",
-		validator: Validators.isEmail,
-		message: "Invalid email address",
-	},
-	{
-		field: "otp",
-		validator: Validators.minLength(4),
-		message: "OTP must be at least 4 characters long",
-	},
-];
-
-export const resendEmailOtpSchema: ValidationRule[] = [
-	{
-		field: "email",
-		validator: Validators.isEmail,
-		message: "Invalid email address",
-	},
-];
+// OTP verification schemas removed

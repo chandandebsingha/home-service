@@ -472,32 +472,16 @@ class ApiService {
 		return { success: true, data: res.data?.data as Booking };
 	}
 
-	// Initiate booking completion OTP
-	async requestPartnerBookingCompletionOtp(
-		token: string,
-		id: number
-	): Promise<ApiResponse<{ message: string }>> {
-		return this.request<any>(
-			API_CONFIG.ENDPOINTS.PARTNER.BOOKINGS.REQUEST_COMPLETE_OTP(id),
-			{
-				method: "POST",
-				headers: { Authorization: `Bearer ${token}` },
-			}
-		);
-	}
-
-	// Verify OTP and complete booking
+	// Complete booking without OTP
 	async verifyPartnerBookingCompletion(
 		token: string,
-		id: number,
-		otp: string
+		id: number
 	): Promise<ApiResponse<Booking>> {
 		const res = await this.request<any>(
 			API_CONFIG.ENDPOINTS.PARTNER.BOOKINGS.COMPLETE_VERIFY(id),
 			{
 				method: "POST",
 				headers: { Authorization: `Bearer ${token}` },
-				body: JSON.stringify({ otp }),
 			}
 		);
 		if (!res.success) return res;

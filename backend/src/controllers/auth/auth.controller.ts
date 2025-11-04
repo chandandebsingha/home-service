@@ -1,10 +1,6 @@
 import { Request, Response } from "express";
 import { AuthService } from "../../services/auth.service";
-import {
-	AuthResponse,
-	UserProfile,
-	VerifyEmailOtpRequest,
-} from "../../types/auth.types";
+import { AuthResponse, UserProfile } from "../../types/auth.types";
 
 export class AuthController {
 	static async register(req: Request, res: Response) {
@@ -121,62 +117,5 @@ export class AuthController {
 		}
 	}
 
-	static async verifyEmailOtp(req: Request, res: Response) {
-		try {
-			const { email, otp } = req.body as VerifyEmailOtpRequest;
-
-			const result = await AuthService.verifyEmailOtp({ email, otp });
-
-			const userProfile: UserProfile = {
-				id: result.user.id,
-				email: result.user.email,
-				fullName: result.user.fullName || "",
-				role: result.user.role || "user",
-				isEmailVerified: result.user.isEmailVerified || false,
-				createdAt: result.user.createdAt || undefined,
-				lastLogin: result.user.lastLogin || undefined,
-			};
-
-			const response: AuthResponse = {
-				success: true,
-				message: "Email verified successfully",
-				data: {
-					user: userProfile,
-					accessToken: result.accessToken,
-					refreshToken: result.refreshToken,
-				},
-			};
-
-			res.status(200).json(response);
-		} catch (error: any) {
-			const response: AuthResponse = {
-				success: false,
-				message: "OTP verification failed",
-				error: error.message,
-			};
-			res.status(400).json(response);
-		}
-	}
-
-	static async resendEmailOtp(req: Request, res: Response) {
-		try {
-			const { email } = req.body as { email: string };
-
-			await AuthService.resendEmailOtp(email);
-
-			const response: AuthResponse = {
-				success: true,
-				message: "OTP resent successfully",
-			};
-
-			res.status(200).json(response);
-		} catch (error: any) {
-			const response: AuthResponse = {
-				success: false,
-				message: "Failed to resend OTP",
-				error: error.message,
-			};
-			res.status(400).json(response);
-		}
-	}
+	// OTP verification endpoints removed
 }

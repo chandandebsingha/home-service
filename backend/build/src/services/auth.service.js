@@ -10,7 +10,6 @@ const drizzle_orm_1 = require("drizzle-orm");
 const supabase_service_1 = require("./supabase.service");
 const jwt_service_1 = require("./jwt.service");
 const bcrypt_1 = __importDefault(require("bcrypt"));
-const email_verification_service_1 = require("./email-verification.service");
 class AuthService {
     static async register(userData) {
         try {
@@ -32,10 +31,9 @@ class AuthService {
                 passwordHash: passwordHash,
                 fullName: userData.fullName,
                 supabaseUid: supabaseUid,
-                isEmailVerified: false,
+                isEmailVerified: true,
             };
             const [user] = await db_1.db.insert(schema_1.users).values(newUser).returning();
-            await email_verification_service_1.EmailVerificationService.createAndSend(user);
             const accessToken = jwt_service_1.JwtService.generateAccessToken(user.id, user.email, user.role);
             const refreshToken = jwt_service_1.JwtService.generateRefreshToken(user.id, user.email, user.role);
             return { user, accessToken, refreshToken };
@@ -93,22 +91,6 @@ class AuthService {
         catch (error) {
             throw error;
         }
-    }
-    static async verifyEmailOtp(payload) {
-        const { email, otp } = payload;
-        if (!email || !otp) {
-            throw new Error("Email and OTP are required");
-        }
-        const user = await email_verification_service_1.EmailVerificationService.verify(email, otp);
-        const accessToken = jwt_service_1.JwtService.generateAccessToken(user.id, user.email, user.role);
-        const refreshToken = jwt_service_1.JwtService.generateRefreshToken(user.id, user.email, user.role);
-        return { user, accessToken, refreshToken };
-    }
-    static async resendEmailOtp(email) {
-        if (!email) {
-            throw new Error("Email is required");
-        }
-        await email_verification_service_1.EmailVerificationService.resend(email);
     }
 }
 exports.AuthService = AuthService;

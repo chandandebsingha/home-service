@@ -3,13 +3,9 @@ import { users, userSessions, type NewUser } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
 import { SupabaseService } from "./supabase.service";
 import { JwtService } from "./jwt.service";
-import {
-	LoginRequest,
-	RegisterRequest,
-	VerifyEmailOtpRequest,
-} from "../types/auth.types";
+import { LoginRequest, RegisterRequest } from "../types/auth.types";
 import bcrypt from "bcrypt";
-import { EmailVerificationService } from "./email-verification.service";
+// OTP/email verification removed
 
 export class AuthService {
 	static async register(userData: RegisterRequest) {
@@ -45,12 +41,11 @@ export class AuthService {
 				passwordHash: passwordHash,
 				fullName: userData.fullName,
 				supabaseUid: supabaseUid,
-				isEmailVerified: false,
+				isEmailVerified: true,
 			};
 
 			const [user] = await db.insert(users).values(newUser).returning();
 
-			await EmailVerificationService.createAndSend(user);
 
 			// 5. Generate tokens
 			const accessToken = JwtService.generateAccessToken(
@@ -144,34 +139,5 @@ export class AuthService {
 		}
 	}
 
-	static async verifyEmailOtp(payload: VerifyEmailOtpRequest) {
-		const { email, otp } = payload;
-
-		if (!email || !otp) {
-			throw new Error("Email and OTP are required");
-		}
-
-		const user = await EmailVerificationService.verify(email, otp);
-
-		const accessToken = JwtService.generateAccessToken(
-			user.id,
-			user.email,
-			user.role!
-		);
-		const refreshToken = JwtService.generateRefreshToken(
-			user.id,
-			user.email,
-			user.role!
-		);
-
-		return { user, accessToken, refreshToken };
-	}
-
-	static async resendEmailOtp(email: string) {
-		if (!email) {
-			throw new Error("Email is required");
-		}
-
-		await EmailVerificationService.resend(email);
-	}
+	// OTP verification methods removed
 }

@@ -9,15 +9,6 @@ export interface RegisterRequest {
 	fullName: string;
 }
 
-export interface VerifyEmailOtpRequest {
-	email: string;
-	otp: string;
-}
-
-export interface ResendEmailOtpRequest {
-	email: string;
-}
-
 export interface AuthResponse {
 	success: boolean;
 	message: string;
