@@ -5,7 +5,7 @@ import { JwtPayload } from "../types/auth.types";
 import { db } from "../db";
 import { users } from "../../drizzle/schema";
 import { eq } from "drizzle-orm";
-// OTP-based booking completion removed
+import { EmailVerificationService } from "../services/email-verification.service";
 
 export class PartnerController {
 	// List bookings for services owned by the partner
@@ -91,7 +91,7 @@ export class PartnerController {
 		}
 	}
 
-	// Previously sent OTP to the booking owner's email; now a no-op for backward compatibility
+	// Send OTP to the booking owner's email to confirm completion
 	static async requestCompletionOtp(
 		req: Request,
 		res: Response
@@ -137,10 +137,8 @@ export class PartnerController {
 				return;
 			}
 
-			// No OTP is sent anymore
-			res
-				.status(200)
-				.json({ success: true, message: "OTP-based confirmation disabled" });
+			await EmailVerificationService.createAndSend(targetUser);
+			res.status(200).json({ success: true, message: "OTP sent" });
 		} catch (error) {
 			const message =
 				error instanceof Error
@@ -150,7 +148,7 @@ export class PartnerController {
 		}
 	}
 
-	// Directly mark booking completed without OTP
+	// Verify OTP then mark booking completed
 	static async verifyCompletionOtp(req: Request, res: Response): Promise<void> {
 		try {
 			const user = (req as any).user as JwtPayload | undefined;
@@ -162,8 +160,13 @@ export class PartnerController {
 			}
 
 			const bookingId = parseInt(req.params.id, 10);
+			const { otp } = req.body as { otp?: string };
 			if (Number.isNaN(bookingId)) {
 				res.status(400).json({ success: false, error: "Invalid booking ID" });
+				return;
+			}
+			if (!otp) {
+				res.status(400).json({ success: false, error: "otp is required" });
 				return;
 			}
 
@@ -193,6 +196,7 @@ export class PartnerController {
 				return;
 			}
 
+			await EmailVerificationService.verify(targetUser.email, String(otp));
 			const updated = await BookingService.updateStatus(bookingId, "completed");
 			res.status(200).json({ success: true, data: updated });
 		} catch (error) {

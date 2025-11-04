@@ -36,6 +36,13 @@ router.post(
 // Verify OTP and complete the booking
 router.post(
 	"/bookings/:id/complete-verify",
+	validateRequest([
+		{
+			field: "otp",
+			validator: Validators.minLength(4),
+			message: "otp must be at least 4 characters",
+		},
+	]),
 	PartnerController.verifyCompletionOtp
 );
 

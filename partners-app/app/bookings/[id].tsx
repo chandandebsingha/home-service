@@ -7,6 +7,8 @@ import {
 	ActivityIndicator,
 	TouchableOpacity,
 	Alert,
+	Modal,
+	TextInput,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Link, useLocalSearchParams, useRouter } from "expo-router";
@@ -22,7 +24,9 @@ export default function BookingDetailsScreen() {
 	const [services, setServices] = useState<Service[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [submitting, setSubmitting] = useState(false);
-	// OTP UI removed
+	const [otpVisible, setOtpVisible] = useState(false);
+	const [otp, setOtp] = useState("");
+	const [otpSending, setOtpSending] = useState(false);
 
 	useEffect(() => {
 		const fetchBooking = async () => {
@@ -116,22 +120,22 @@ export default function BookingDetailsScreen() {
 
 	const handleComplete = async () => {
 		if (!booking || !accessToken) return;
+		// Instantly show the OTP modal and fire the send request in background
+		setOtp("");
+		setOtpVisible(true);
 		try {
-			setSubmitting(true);
-			const res = await apiService.verifyPartnerBookingCompletion(
+			setOtpSending(true);
+			const res = await apiService.requestPartnerBookingCompletionOtp(
 				accessToken,
 				booking.id
 			);
-			if (res.success && res.data) {
-				setBooking(res.data);
-				Alert.alert("Success", "Booking marked as completed.");
-			} else {
-				Alert.alert("Error", res.error || "Failed to complete booking.");
+			if (!res.success) {
+				Alert.alert("Error", res.error || "Failed to send OTP.");
 			}
 		} catch (err: any) {
-			Alert.alert("Error", err?.message || "Failed to complete booking.");
+			Alert.alert("Error", err?.message || "Failed to send OTP.");
 		} finally {
-			setSubmitting(false);
+			setOtpSending(false);
 		}
 	};
 
@@ -277,7 +281,108 @@ export default function BookingDetailsScreen() {
 				</View>
 			</View>
 
-			{/* OTP UI removed */}
+			{/* OTP Modal */}
+			<Modal visible={otpVisible} transparent animationType="fade">
+				<View style={styles.otpModal}>
+					<View style={styles.otpCard}>
+						<Text style={styles.otpTitle}>Enter verification code</Text>
+						<Text style={styles.otpHint}>
+							We sent a 6-digit code to the customer's email. Enter it below to
+							confirm completion.
+						</Text>
+						{otpSending ? (
+							<Text style={styles.otpHint}>Sending code…</Text>
+						) : null}
+						<TextInput
+							value={otp}
+							onChangeText={setOtp}
+							inputMode="numeric"
+							keyboardType="number-pad"
+							maxLength={6}
+							placeholder="••••••"
+							style={styles.otpInput}
+						/>
+						<TouchableOpacity
+							accessibilityRole="button"
+							onPress={async () => {
+								try {
+									if (!accessToken || !booking) return;
+									setOtpSending(true);
+									const r = await apiService.requestPartnerBookingCompletionOtp(
+										accessToken,
+										booking.id
+									);
+									if (!r.success) {
+										Alert.alert("Error", r.error || "Failed to resend OTP.");
+									}
+								} catch (e: any) {
+									Alert.alert("Error", e?.message || "Failed to resend OTP.");
+								} finally {
+									setOtpSending(false);
+								}
+							}}
+							disabled={otpSending}
+							style={styles.otpResend}
+						>
+							<Text style={styles.otpResendText}>
+								{otpSending ? "Sending…" : "Resend code"}
+							</Text>
+						</TouchableOpacity>
+						<View style={styles.otpActions}>
+							<TouchableOpacity
+								style={styles.otpCancel}
+								onPress={() => setOtpVisible(false)}
+								disabled={submitting}
+							>
+								<Text style={styles.otpCancelText}>Cancel</Text>
+							</TouchableOpacity>
+							<TouchableOpacity
+								style={styles.otpConfirm}
+								onPress={async () => {
+									try {
+										if (!accessToken || !booking) return;
+										if (!otp || otp.length < 4) {
+											Alert.alert(
+												"Invalid OTP",
+												"Please enter the 6-digit code."
+											);
+											return;
+										}
+										setSubmitting(true);
+										const res = await apiService.verifyPartnerBookingCompletion(
+											accessToken,
+											booking.id,
+											otp
+										);
+										if (res.success && res.data) {
+											setBooking(res.data);
+											setOtpVisible(false);
+											Alert.alert("Success", "Booking marked as completed.");
+										} else {
+											Alert.alert(
+												"Error",
+												res.error || "Failed to verify OTP."
+											);
+										}
+									} catch (err: any) {
+										Alert.alert(
+											"Error",
+											err?.message || "Failed to verify OTP."
+										);
+									} finally {
+										setSubmitting(false);
+									}
+								}}
+								disabled={submitting || otpSending}
+							>
+								<Text style={styles.otpConfirmText}>
+									{submitting ? "Verifying..." : "Confirm"}
+								</Text>
+							</TouchableOpacity>
+						</View>
+					</View>
+				</View>
+			</Modal>
 		</ScrollView>
 	);
 }
