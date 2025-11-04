@@ -82,6 +82,11 @@ app.get("/api", (req, res) => {
 	});
 });
 
+// Conventional health endpoint used by many PaaS health checks
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime(), timestamp: Date.now() });
+});
+
 // Error handling middleware (must be last)
 app.use(errorHandler);
 

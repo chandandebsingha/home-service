@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: home-service-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Provide all required variables in the Render dashboard or via blueprint overrides
+      # The following keys are required by the app at startup:
+      # - SUPABASE_URL
+      # - SUPABASE_ANON_KEY
+      # - SUPABASE_SERVICE_ROLE_KEY
+      # - DATABASE_URL
+      # - JWT_SECRET
