@@ -23,7 +23,7 @@ const parseBoolean = (value?: string) => {
 	return ["true", "1", "yes", "y"].includes(value.toLowerCase());
 };
 
-const smtpPortRaw = process.env.SMTP_PORT;
+const smtpPortRaw = process.env.SMTP_PORT || "587";
 let smtpPort = 587;
 if (smtpPortRaw) {
 	const parsed = Number.parseInt(smtpPortRaw, 10);

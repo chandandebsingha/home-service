@@ -2,18 +2,18 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "Home Service Backend API with Supabase and Drizzle ORM",
-  "main": "index.js",
+  "main": "build/index.js",
   "scripts": {
-    "start": "node build/src/index.js",
-    "dev": "nodemon --exec ts-node src/index.ts",
+    "start": "node build/index.js",
+    "dev": "nodemon src/index.ts",
     "build": "tsc",
-    "start:mem": "node --max-old-space-size=1024 build/src/index.js",
     "build:dev": "tsc --watch",
     "clean": "rimraf build",
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:migrate": "drizzle-kit migrate",
+    "db:setup": "node setup-env.js",
     "db:backfill:supabaseUid": "ts-node src/scripts/backfill-supabase-uid.ts",
     "seed:admin": "ts-node src/scripts/seed-admin.ts",
     "lint": "eslint src/**/*.ts",
@@ -31,6 +31,7 @@
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.8",
+    "pg": "^8.11.3",
     "postgres": "^3.4.3",
     "zod": "^3.22.4"
   },
@@ -41,6 +42,7 @@
     "@types/jsonwebtoken": "^9.0.5",
     "@types/node": "^20.8.2",
     "@types/nodemailer": "^6.4.14",
+    "@types/pg": "^8.10.7",
     "@typescript-eslint/eslint-plugin": "^6.7.4",
     "@typescript-eslint/parser": "^6.7.4",
     "drizzle-kit": "^0.31.4",
@@ -67,7 +69,7 @@
   "author": "Your Name",
   "license": "MIT",
   "engines": {
-    "node": "20.x",
+    "node": ">=18.0.0",
     "npm": ">=8.0.0"
   }
 }
